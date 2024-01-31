@@ -3,11 +3,16 @@ package com.example.beautybook.service.impl;
 import com.example.beautybook.dto.user.UserDto;
 import com.example.beautybook.dto.user.UserRegistrationDto;
 import com.example.beautybook.dto.user.UserUpdateDto;
+import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.exceptions.RegistrationException;
 import com.example.beautybook.mapper.UserMapper;
+import com.example.beautybook.model.Role;
 import com.example.beautybook.model.User;
+import com.example.beautybook.repository.RoleRepository;
 import com.example.beautybook.repository.UserRepository;
 import com.example.beautybook.service.UserService;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final RoleRepository roleRepository;
 
     @Override
     public UserDto createUser(UserRegistrationDto userRegistrationDto) {
@@ -23,6 +29,12 @@ public class UserServiceImpl implements UserService {
             throw new RegistrationException("User with email already exists");
         }
         User user = userMapper.toModel(userRegistrationDto);
+        Set<Role> roles = new HashSet<>();
+        roles.add(
+                roleRepository.findByName(Role.RoleName.CUSTOMER)
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Not found role by name: " + Role.RoleName.CUSTOMER)));
+        user.setRoles(roles);
         return userMapper.toDto(userRepository.save(user));
     }
 

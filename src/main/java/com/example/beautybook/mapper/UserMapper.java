@@ -6,11 +6,12 @@ import com.example.beautybook.dto.user.UserRegistrationDto;
 import com.example.beautybook.dto.user.UserUpdateDto;
 import com.example.beautybook.model.User;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 @Mapper(config = MapperConfig.class)
 public interface UserMapper {
-
+    @Mapping(target = "roles", ignore = true)
     User toModel(UserRegistrationDto userRegistrationDto);
 
     UserDto toDto(User user);
