@@ -14,6 +14,7 @@ import com.example.beautybook.service.UserService;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,20 +23,22 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDto createUser(UserRegistrationDto userRegistrationDto) {
         if (userRepository.findByEmail(userRegistrationDto.getEmail()).isPresent()) {
             throw new RegistrationException("User with email already exists");
         }
-        User user = userMapper.toModel(userRegistrationDto);
+        User newUser = userMapper.toModel(userRegistrationDto);
+        newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         Set<Role> roles = new HashSet<>();
         roles.add(
                 roleRepository.findByName(Role.RoleName.CUSTOMER)
                         .orElseThrow(() -> new EntityNotFoundException(
                                 "Not found role by name: " + Role.RoleName.CUSTOMER)));
-        user.setRoles(roles);
-        return userMapper.toDto(userRepository.save(user));
+        newUser.setRoles(roles);
+        return userMapper.toDto(userRepository.save(newUser));
     }
 
     @Override
