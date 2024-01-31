@@ -1,7 +1,6 @@
 package com.example.beautybook.service;
 
 import com.example.beautybook.dto.category.CategoryDto;
-import com.example.beautybook.model.Category;
 import java.util.List;
 
 public interface CategoryService {

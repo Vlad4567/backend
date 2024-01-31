@@ -1,6 +1,5 @@
 package com.example.beautybook.dto.user;
 
-import com.example.beautybook.model.Role;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
@@ -21,7 +20,8 @@ public class UserRegistrationDto {
     private String password;
     @Transient
     private String repeatPassword;
-    private Role role;
+    @NotNull
+    private String username;
 
     @AssertTrue(message = "Password mismatch")
     public boolean isPasswordMatching() {
