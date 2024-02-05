@@ -8,11 +8,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @Data
 @Entity
 @Table(name = "photos")
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class Photo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,6 +26,4 @@ public class Photo {
     @ManyToOne
     @JoinColumn(name = "master_card_id")
     private MasterCard masterCard;
-    @Column(name = "description")
-    private String description;
 }

@@ -36,7 +36,7 @@ public interface MasterCardMapper {
             MasterCard masterCard
     ) {
         masterCardDto.setGallery(masterCard.getGallery().stream()
-                .map(photo -> new PhotoDto(photo.getPhotoUrl(), photo.getDescription()))
+                .map(photo -> new PhotoDto(photo.getPhotoUrl()))
                 .collect(Collectors.toSet()));
     }
 }
