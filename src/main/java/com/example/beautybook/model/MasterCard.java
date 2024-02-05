@@ -12,9 +12,11 @@ import jakarta.persistence.OneToOne;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @Entity
+@EqualsAndHashCode(exclude = "gallery")
 public class MasterCard {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,7 +24,7 @@ public class MasterCard {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
-    @Column(name = "address", nullable = false)
+    @Column(name = "address")
     private String address;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "location_id")

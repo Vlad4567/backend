@@ -8,6 +8,7 @@ import com.example.beautybook.model.User;
 import com.example.beautybook.repository.MasterCardRepository;
 import com.example.beautybook.repository.UserRepository;
 import com.example.beautybook.service.MasterCardService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +22,7 @@ public class MasterCardServiceImpl implements MasterCardService {
     private final MasterCardMapper masterCardMapper;
 
     @Override
+    @Transactional
     public MasterCardDto createNewMasterCard() {
         User user = getAuthenticatedUser();
         MasterCard masterCard = new MasterCard();
