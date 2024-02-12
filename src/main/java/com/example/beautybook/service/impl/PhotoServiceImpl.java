@@ -47,7 +47,11 @@ public class PhotoServiceImpl implements PhotoService {
         if (virusScanner.scanFile(newPhotoPath) instanceof ScanResult.VirusFound) {
             throw new VirusDetectionException("Virus detected in the uploaded photo.");
         }
-        masterCard.getGallery().add(new Photo(null, newPhotoPath, masterCard));
+        Photo newPhoto = new Photo(null, newPhotoPath, masterCard);
+        if (masterCard.getGallery().isEmpty()) {
+            masterCard.setMainPhoto(newPhoto);
+        }
+        masterCard.getGallery().add(newPhoto);
         masterCardRepository.save(masterCard);
         return new PhotoDto(newPhotoPath);
     }
