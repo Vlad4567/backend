@@ -22,8 +22,6 @@ public class UserRegistrationDto {
     private String repeatPassword;
     @NotNull
     private String username;
-    private String firstName;
-    private String lastName;
 
     @AssertTrue(message = "Password mismatch")
     public boolean isPasswordMatching() {

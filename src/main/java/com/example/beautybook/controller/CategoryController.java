@@ -1,6 +1,7 @@
 package com.example.beautybook.controller;
 
 import com.example.beautybook.dto.category.CategoryDto;
+import com.example.beautybook.dto.category.CategoryResponseDto;
 import com.example.beautybook.service.CategoryService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -25,7 +26,7 @@ public class CategoryController {
     }
 
     @GetMapping("/categories")
-    public List<CategoryDto> getAll() {
+    public List<CategoryResponseDto> getAll() {
         return categoryService.getAllCategory();
     }
 

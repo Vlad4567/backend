@@ -1,6 +1,7 @@
 package com.example.beautybook.service.impl;
 
 import com.example.beautybook.dto.category.CategoryDto;
+import com.example.beautybook.dto.category.CategoryResponseDto;
 import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.mapper.CategoryMapper;
 import com.example.beautybook.model.Category;
@@ -32,13 +33,13 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<CategoryDto> getAllCategory() {
+    public List<CategoryResponseDto> getAllCategory() {
         List<Category> listCategory = categoryRepository.findAll();
         if (listCategory.isEmpty()) {
             return new ArrayList<>();
         }
         return listCategory.stream()
-                .map(categoryMapper::toDto)
+                .map(categoryMapper::toResponseDto)
                 .toList();
     }
 }

@@ -1,6 +1,7 @@
 package com.example.beautybook.service;
 
 import com.example.beautybook.dto.category.CategoryDto;
+import com.example.beautybook.dto.category.CategoryResponseDto;
 import java.util.List;
 
 public interface CategoryService {
@@ -8,5 +9,5 @@ public interface CategoryService {
 
     CategoryDto update(Long id, CategoryDto categoryDto);
 
-    List<CategoryDto> getAllCategory();
+    List<CategoryResponseDto> getAllCategory();
 }
