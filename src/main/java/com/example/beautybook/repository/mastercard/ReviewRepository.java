@@ -1,4 +1,4 @@
-package com.example.beautybook.repository;
+package com.example.beautybook.repository.mastercard;
 
 import com.example.beautybook.model.Review;
 import java.util.List;

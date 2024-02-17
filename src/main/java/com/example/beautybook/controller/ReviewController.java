@@ -41,7 +41,7 @@ public class ReviewController {
         return reviewService.update(id, reviewUpdateDto);
     }
 
-    @GetMapping("mastercart/{id}/review")
+    @GetMapping("/mastercart/{id}/review")
     List<ReviewDto> getAllByMasterCardId(@PathVariable Long id) {
         return reviewService.getAllByMasterCardId(id);
     }

@@ -1,5 +1,6 @@
 package com.example.beautybook.service;
 
+import com.example.beautybook.dto.SearchParam;
 import com.example.beautybook.dto.mastercard.MasterCardDto;
 import com.example.beautybook.dto.mastercard.MasterCardResponseDto;
 import com.example.beautybook.dto.mastercard.MasterCardUpdateDto;
@@ -15,4 +16,6 @@ public interface MasterCardService {
     MasterCardDto updateMasterCard(MasterCardUpdateDto masterCardUpdateDto);
 
     MasterCardDto getMasterCardById(Long id);
+
+    Page<MasterCardResponseDto> searchMasterCard(SearchParam param);
 }

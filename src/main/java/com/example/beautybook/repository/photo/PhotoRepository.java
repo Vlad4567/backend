@@ -1,4 +1,4 @@
-package com.example.beautybook.repository;
+package com.example.beautybook.repository.photo;
 
 import com.example.beautybook.model.Photo;
 import org.springframework.data.jpa.repository.JpaRepository;
