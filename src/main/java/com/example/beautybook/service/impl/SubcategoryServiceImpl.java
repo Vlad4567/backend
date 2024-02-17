@@ -5,7 +5,7 @@ import com.example.beautybook.dto.category.SubcategoryResponseDto;
 import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.mapper.SubcategoryMapper;
 import com.example.beautybook.model.Subcategory;
-import com.example.beautybook.repository.SubcategoryRepository;
+import com.example.beautybook.repository.categoty.SubcategoryRepository;
 import com.example.beautybook.service.SubcategoryService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

@@ -13,7 +13,7 @@ import org.mapstruct.MappingTarget;
 @Mapper(config = MapperConfig.class)
 public interface ServiceCardMapper {
     @Mapping(target = "masterCardId", source = "masterCard.id")
-    @Mapping(target = "subcategory", source = "subcategory.name")
+    @Mapping(target = "subcategoryId", source = "subcategory.id")
     ServiceCardDto toDto(ServiceCard serviceCard);
 
     @Mapping(target = "subcategory", ignore = true)

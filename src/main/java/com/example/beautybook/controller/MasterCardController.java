@@ -1,5 +1,6 @@
 package com.example.beautybook.controller;
 
+import com.example.beautybook.dto.SearchParam;
 import com.example.beautybook.dto.mastercard.MasterCardDto;
 import com.example.beautybook.dto.mastercard.MasterCardResponseDto;
 import com.example.beautybook.dto.mastercard.MasterCardUpdateDto;
@@ -8,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,7 +27,7 @@ public class MasterCardController {
         return masterCardService.createNewMasterCard();
     }
 
-    @GetMapping("/masterTop20")
+    @GetMapping("/masterSortByRating")
     Page<MasterCardResponseDto> getTop20MasterCard(
             @RequestParam(defaultValue = "0")
             int pageNumber,
@@ -50,5 +52,14 @@ public class MasterCardController {
                                    @Valid
                                    MasterCardUpdateDto masterCardUpdateDto) {
         return masterCardService.updateMasterCard(masterCardUpdateDto);
+    }
+
+    @GetMapping("/master/search")
+    Page<MasterCardResponseDto> searchMasterCard(
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @ModelAttribute SearchParam searchParam
+    ) {
+        return masterCardService.searchMasterCard(searchParam);
     }
 }

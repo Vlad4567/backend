@@ -9,6 +9,6 @@ public class ServiceCardDto {
     private String name;
     private BigDecimal price;
     private int duration;
-    private String subcategory;
+    private Long subcategoryId;
     private Long masterCardId;
 }

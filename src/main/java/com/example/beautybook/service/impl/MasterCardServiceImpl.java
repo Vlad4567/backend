@@ -1,5 +1,6 @@
 package com.example.beautybook.service.impl;
 
+import com.example.beautybook.dto.SearchParam;
 import com.example.beautybook.dto.mastercard.MasterCardDto;
 import com.example.beautybook.dto.mastercard.MasterCardResponseDto;
 import com.example.beautybook.dto.mastercard.MasterCardUpdateDto;
@@ -7,8 +8,9 @@ import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.mapper.MasterCardMapper;
 import com.example.beautybook.model.MasterCard;
 import com.example.beautybook.model.User;
-import com.example.beautybook.repository.MasterCardRepository;
-import com.example.beautybook.repository.UserRepository;
+import com.example.beautybook.repository.mastercard.MasterCardRepository;
+import com.example.beautybook.repository.user.SpecificationBuilder;
+import com.example.beautybook.repository.user.UserRepository;
 import com.example.beautybook.service.MasterCardService;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -27,6 +29,7 @@ public class MasterCardServiceImpl implements MasterCardService {
     private final UserRepository userRepository;
     private final MasterCardRepository masterCardRepository;
     private final MasterCardMapper masterCardMapper;
+    private final SpecificationBuilder<MasterCard> masterCardSpecificationBuilder;
 
     @Override
     @Transactional
@@ -47,7 +50,7 @@ public class MasterCardServiceImpl implements MasterCardService {
                 .toList();
         return new PageImpl<>(
                 dtos,
-                masterCards.getPageable(), 
+                masterCards.getPageable(),
                 masterCards.getTotalElements()
         );
     }
@@ -55,7 +58,6 @@ public class MasterCardServiceImpl implements MasterCardService {
     @Override
     public MasterCardDto getUserMasterCard() {
         MasterCard masterCard = getAuthenticatedUserMasterCard();
-
         return masterCardMapper.toDto(masterCard);
     }
 
@@ -73,6 +75,15 @@ public class MasterCardServiceImpl implements MasterCardService {
                         "Not found Master card by id: " + id)
                 );
         return masterCardMapper.toDto(masterCard);
+    }
+
+    @Override
+    public Page<MasterCardResponseDto> searchMasterCard(SearchParam param) {
+
+        List<MasterCard> list = masterCardRepository.findAll(
+                masterCardSpecificationBuilder.build(param));
+        return null;
+
     }
 
     private User getAuthenticatedUser() {

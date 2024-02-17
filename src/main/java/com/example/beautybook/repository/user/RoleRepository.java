@@ -1,4 +1,4 @@
-package com.example.beautybook.repository;
+package com.example.beautybook.repository.user;
 
 import com.example.beautybook.model.Role;
 import java.util.Optional;

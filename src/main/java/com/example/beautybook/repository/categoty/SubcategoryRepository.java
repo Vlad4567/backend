@@ -1,4 +1,4 @@
-package com.example.beautybook.repository;
+package com.example.beautybook.repository.categoty;
 
 import com.example.beautybook.model.Subcategory;
 import java.util.List;

@@ -33,8 +33,9 @@ public class MasterCard {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "address")
-    private String address;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id")
+    private Address address;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "location_id")

@@ -5,7 +5,7 @@ import com.example.beautybook.dto.category.CategoryResponseDto;
 import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.mapper.CategoryMapper;
 import com.example.beautybook.model.Category;
-import com.example.beautybook.repository.CategoryRepository;
+import com.example.beautybook.repository.categoty.CategoryRepository;
 import com.example.beautybook.service.CategoryService;
 import java.util.ArrayList;
 import java.util.List;

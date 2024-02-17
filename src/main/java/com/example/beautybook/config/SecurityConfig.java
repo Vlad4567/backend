@@ -40,9 +40,12 @@ public class SecurityConfig {
                                        "/swagger-ui/**",
                                        "/v3/api-docs/**",
                                        "/subcategories",
-                                       "/masterTop20",
+                                       "/masterSortByRating",
                                        "/master/**",
-                                       "/categories"
+                                       "/mastercart/{id}/review",
+                                       "/mastercard/{id}/servicecard",
+                                       "/categories",
+                                       "/master/search"
                                    )
                                    .permitAll()
                                    .anyRequest()

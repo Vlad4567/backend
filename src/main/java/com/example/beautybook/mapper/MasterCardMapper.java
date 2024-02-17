@@ -17,7 +17,9 @@ import org.mapstruct.MappingTarget;
                 PhotoMapper.class,
                 ReviewMapper.class,
                 LocationMapper.class,
-                SubcategoryMapper.class
+                SubcategoryMapper.class,
+                AddressMapper.class,
+                ServiceCardMapper.class
         })
 public interface MasterCardMapper {
     MasterCard toModel(MasterCardUpdateDto masterCardUpdateDto);
