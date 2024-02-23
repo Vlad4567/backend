@@ -3,6 +3,7 @@ package com.example.beautybook.dto.user;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
@@ -20,7 +21,7 @@ public class UserRegistrationDto {
     private String password;
     @Transient
     private String repeatPassword;
-    @NotNull
+    @NotBlank
     private String username;
 
     @AssertTrue(message = "Password mismatch")

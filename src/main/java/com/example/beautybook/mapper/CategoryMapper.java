@@ -7,7 +7,10 @@ import com.example.beautybook.model.Category;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 
-@Mapper(config = MapperConfig.class)
+@Mapper(
+        config = MapperConfig.class,
+        uses = SubcategoryMapper.class
+)
 public interface CategoryMapper {
     Category toModel(CategoryDto categoryDto);
 

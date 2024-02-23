@@ -1,7 +1,7 @@
-package com.example.beautybook.service;
+package com.example.beautybook.util;
 
 import org.springframework.web.multipart.MultipartFile;
 
-public interface UploadFileService {
+public interface UploadFileUtil {
     String uploadFile(MultipartFile file, String fileName);
 }

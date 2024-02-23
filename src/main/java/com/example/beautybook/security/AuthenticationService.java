@@ -5,4 +5,6 @@ import com.example.beautybook.dto.user.UserLoginResponseDto;
 
 public interface AuthenticationService {
     UserLoginResponseDto authentication(UserLoginRequestDto loginRequestDto);
+
+    boolean verificationEmail(String token);
 }

@@ -8,13 +8,18 @@ import com.example.beautybook.exceptions.RegistrationException;
 import com.example.beautybook.exceptions.VirusDetectionException;
 import com.example.beautybook.exceptions.photo.InvalidOriginFileNameException;
 import com.example.beautybook.mapper.UserMapper;
+import com.example.beautybook.model.MasterCard;
 import com.example.beautybook.model.Role;
 import com.example.beautybook.model.User;
+import com.example.beautybook.repository.mastercard.MasterCardRepository;
 import com.example.beautybook.repository.user.RoleRepository;
 import com.example.beautybook.repository.user.UserRepository;
-import com.example.beautybook.service.UploadFileService;
+import com.example.beautybook.security.JwtUtil;
+import com.example.beautybook.service.EmailService;
 import com.example.beautybook.service.UserService;
-import com.example.beautybook.virusscanner.VirusScannerService;
+import com.example.beautybook.util.PasswordGeneratorUtil;
+import com.example.beautybook.util.UploadFileUtil;
+import com.example.beautybook.util.VirusScannerUtil;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +35,14 @@ import xyz.capybara.clamav.commands.scan.result.ScanResult;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final MasterCardRepository masterCardRepository;
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UploadFileService uploadFileService;
-    private final VirusScannerService virusScannerService;
+    private final UploadFileUtil uploadFileUtil;
+    private final VirusScannerUtil virusScannerUtil;
+    private final EmailService emailService;
+    private final PasswordGeneratorUtil passwordGenerator;
     @Value("${uploud.dir}")
     private String uploadDir;
 
@@ -47,10 +55,11 @@ public class UserServiceImpl implements UserService {
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         Set<Role> roles = new HashSet<>();
         roles.add(
-                roleRepository.findByName(Role.RoleName.CUSTOMER)
+                roleRepository.findByName(Role.RoleName.UNVERIFIED)
                         .orElseThrow(() -> new EntityNotFoundException(
-                                "Not found role by name: " + Role.RoleName.CUSTOMER)));
+                                "Not found role by name: " + Role.RoleName.UNVERIFIED)));
         newUser.setRoles(roles);
+        emailService.sendMail(newUser,"verification");
         return userMapper.toDto(userRepository.save(newUser));
     }
 
@@ -68,12 +77,46 @@ public class UserServiceImpl implements UserService {
     public UserDto uploadProfilePhoto(MultipartFile file) {
         User user = getAuthenticatedUser();
         String path = uploadDir + user.getUsername() + getFileExtension(file);
-        uploadFileService.uploadFile(file, path);
-        if (virusScannerService.scanFile(path) instanceof ScanResult.VirusFound) {
+        uploadFileUtil.uploadFile(file, path);
+        if (virusScannerUtil.scanFile(path) instanceof ScanResult.VirusFound) {
             throw new VirusDetectionException("Virus detected in the uploaded photo.");
         }
         user.setProfilePhoto(path);
         return userMapper.toDto(userRepository.save(user));
+    }
+
+    @Override
+    public UserDto addFavoriteMasterCard(Long id) {
+        User user = getAuthenticatedUser();
+        MasterCard masterCard = masterCardRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Not found master card by id: " + id)
+                );
+        user.getFavorite().add(masterCard);
+        return userMapper.toDto(userRepository.save(user));
+    }
+
+    @Override
+    public UserDto deleteFavoriteMasterCard(Long id) {
+        User user = getAuthenticatedUser();
+        MasterCard masterCard = masterCardRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Not found master card by id: " + id)
+                );
+        user.getFavorite().remove(masterCard);
+        return userMapper.toDto(userRepository.save(user));
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Not found user by email: " + email)
+                );
+        user.setPassword(passwordGenerator.generateRandomPassword());
+        emailService.sendMail(user, "passwordReset");
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
     }
 
     private User getAuthenticatedUser() {

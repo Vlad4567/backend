@@ -1,6 +1,6 @@
 package com.example.beautybook.controller;
 
-import com.example.beautybook.dto.SearchParam;
+import com.example.beautybook.dto.search.SearchParam;
 import com.example.beautybook.dto.mastercard.MasterCardDto;
 import com.example.beautybook.dto.mastercard.MasterCardResponseDto;
 import com.example.beautybook.dto.mastercard.MasterCardUpdateDto;
@@ -56,9 +56,7 @@ public class MasterCardController {
 
     @GetMapping("/master/search")
     Page<MasterCardResponseDto> searchMasterCard(
-            @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "10") int pageSize,
-            @ModelAttribute SearchParam searchParam
+            @RequestBody SearchParam searchParam
     ) {
         return masterCardService.searchMasterCard(searchParam);
     }

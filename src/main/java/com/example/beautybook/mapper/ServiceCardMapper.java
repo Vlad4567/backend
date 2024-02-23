@@ -3,6 +3,7 @@ package com.example.beautybook.mapper;
 import com.example.beautybook.config.MapperConfig;
 import com.example.beautybook.dto.servicecard.ServiceCardCreateDto;
 import com.example.beautybook.dto.servicecard.ServiceCardDto;
+import com.example.beautybook.dto.servicecard.ServiceCardSearchDto;
 import com.example.beautybook.model.ServiceCard;
 import com.example.beautybook.model.Subcategory;
 import org.mapstruct.AfterMapping;
@@ -10,7 +11,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(config = MapperConfig.class)
+@Mapper(
+        config = MapperConfig.class,
+        uses = {
+                PhotoMapper.class,
+                SubcategoryMapper.class,
+                AddressMapper.class
+        })
 public interface ServiceCardMapper {
     @Mapping(target = "masterCardId", source = "masterCard.id")
     @Mapping(target = "subcategoryId", source = "subcategory.id")
@@ -18,6 +25,9 @@ public interface ServiceCardMapper {
 
     @Mapping(target = "subcategory", ignore = true)
     ServiceCard toModel(ServiceCardCreateDto serviceCardCreateDto);
+
+    @Mapping(target = "subcategory", source = "subcategory.name")
+    ServiceCardSearchDto toSearchDto(ServiceCard serviceCard);
 
     @AfterMapping
     default void setSubcategory(
