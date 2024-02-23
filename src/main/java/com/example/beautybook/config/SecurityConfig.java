@@ -45,7 +45,9 @@ public class SecurityConfig {
                                        "/mastercart/{id}/review",
                                        "/mastercard/{id}/servicecard",
                                        "/categories",
-                                       "/master/search"
+                                       "/auth/verificationMail/{token}",
+                                       "/servicecard/search",
+                                       "/city"
                                    )
                                    .permitAll()
                                    .anyRequest()

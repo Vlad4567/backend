@@ -3,6 +3,7 @@ package com.example.beautybook.service.impl;
 import com.example.beautybook.dto.review.ReviewCreateDto;
 import com.example.beautybook.dto.review.ReviewDto;
 import com.example.beautybook.dto.review.ReviewUpdateDto;
+import com.example.beautybook.exceptions.AccessDeniedException;
 import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.mapper.ReviewMapper;
 import com.example.beautybook.model.MasterCard;
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Set;
+import javax.security.auth.login.AccountException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,7 +38,7 @@ public class ReviewServiceImpl implements ReviewService {
         newReview.setMasterCard(new MasterCard(id));
         newReview.setUser(user);
         Review review = reviewRepository.save(newReview);
-        updateMasterCardRatingAndReviews(review);
+        updateMasterCardRating(review.getMasterCard());
         return reviewMapper.toDto(review);
     }
 
@@ -46,11 +48,12 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Not found review by id: " + id));
         if (!user.getId().equals(review.getUser().getId())) {
-            throw new RuntimeException(""); //TODO
+            throw new AccessDeniedException("You don't have permission to update this review.");
         }
         reviewMapper.updateReviewFromDto(reviewUpdateDto, review);
-        updateMasterCartRating(review.getMasterCard());
-        return reviewMapper.toDto(reviewRepository.save(review));
+        review = reviewRepository.save(review);
+        updateMasterCardRating(review.getMasterCard());
+        return reviewMapper.toDto(review);
     }
 
     @Override
@@ -60,32 +63,10 @@ public class ReviewServiceImpl implements ReviewService {
                 .toList();
     }
 
-    private BigDecimal calculateAverageRating(Set<Review> reviews) {
-        if (!reviews.isEmpty()) {
-            int sumOfGrades = reviews.stream()
-                    .mapToInt(Review::getGrade)
-                    .sum();
-            double averageGrade = (double) sumOfGrades / reviews.size();
-            return BigDecimal.valueOf(averageGrade)
-                    .setScale(1, RoundingMode.HALF_UP);
-        } else {
-            return new BigDecimal("0.0");
-        }
-    }
-
-    private void updateMasterCardRatingAndReviews(Review review) {
-        MasterCard masterCard =
-                masterCardRepository.findMasterCardById(review.getMasterCard().getId())
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Not found Mastercard by id: "
-                                + review.getMasterCard().getId()));
-        BigDecimal averageRating = calculateAverageRating(masterCard.getReviews());
-        masterCard.setRating(averageRating);
-        masterCardRepository.save(masterCard);
-    }
-
-    private void updateMasterCartRating(MasterCard masterCard) {
-        BigDecimal averageRating = calculateAverageRating(masterCard.getReviews());
+    private void updateMasterCardRating(MasterCard masterCard) {
+        BigDecimal averageRating =
+                BigDecimal.valueOf(reviewRepository.getAverageRatingByMasterId(masterCard.getId()))
+                        .setScale(1, RoundingMode.HALF_UP);
         masterCard.setRating(averageRating);
         masterCardRepository.save(masterCard);
     }

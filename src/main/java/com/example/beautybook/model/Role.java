@@ -29,6 +29,7 @@ public class Role implements GrantedAuthority {
     }
 
     public enum RoleName {
+        UNVERIFIED,
         ADMIN,
         MASTER,
         CUSTOMER;

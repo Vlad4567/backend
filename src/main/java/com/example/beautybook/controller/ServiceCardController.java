@@ -1,11 +1,14 @@
 package com.example.beautybook.controller;
 
+import com.example.beautybook.dto.search.SearchParam;
 import com.example.beautybook.dto.servicecard.ServiceCardCreateDto;
 import com.example.beautybook.dto.servicecard.ServiceCardDto;
+import com.example.beautybook.dto.servicecard.ServiceCardSearchDto;
 import com.example.beautybook.service.ServiceCardService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,5 +31,14 @@ public class ServiceCardController {
             @Valid
             ServiceCardCreateDto serviceCardCreateDto) {
         return serviceCardService.createServiceCard(serviceCardCreateDto);
+    }
+
+    @GetMapping("/servicecard/search")
+    public Page<ServiceCardSearchDto> search(
+            @RequestBody
+            @Valid
+            SearchParam param
+    ) {
+      return serviceCardService.search(param);
     }
 }

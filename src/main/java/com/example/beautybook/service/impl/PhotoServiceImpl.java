@@ -11,8 +11,8 @@ import com.example.beautybook.model.Photo;
 import com.example.beautybook.repository.mastercard.MasterCardRepository;
 import com.example.beautybook.repository.photo.PhotoRepository;
 import com.example.beautybook.service.PhotoService;
-import com.example.beautybook.service.UploadFileService;
-import com.example.beautybook.virusscanner.VirusScannerService;
+import com.example.beautybook.util.UploadFileUtil;
+import com.example.beautybook.util.VirusScannerUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -24,11 +24,11 @@ import xyz.capybara.clamav.commands.scan.result.ScanResult;
 @Service
 @RequiredArgsConstructor
 public class PhotoServiceImpl implements PhotoService {
-    private final VirusScannerService virusScanner;
+    private final VirusScannerUtil virusScanner;
     private final MasterCardRepository masterCardRepository;
     private final PhotoRepository photoRepository;
     private final PhotoMapper photoMapper;
-    private final UploadFileService uploadFileService;
+    private final UploadFileUtil uploadFileUtil;
     @Value("${uploud.dir}")
     private String uploadDir;
     @Value("${limit.photo}")
@@ -43,7 +43,7 @@ public class PhotoServiceImpl implements PhotoService {
                             + "You can only upload up to " + limitPhoto + " photos.");
         }
         String path = uploadDir + generatePhotoFileName(masterCard, file);
-        String newPhotoPath = uploadFileService.uploadFile(file, path);
+        String newPhotoPath = uploadFileUtil.uploadFile(file, path);
         if (virusScanner.scanFile(newPhotoPath) instanceof ScanResult.VirusFound) {
             throw new VirusDetectionException("Virus detected in the uploaded photo.");
         }

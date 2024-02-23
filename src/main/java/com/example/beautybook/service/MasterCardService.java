@@ -1,6 +1,6 @@
 package com.example.beautybook.service;
 
-import com.example.beautybook.dto.SearchParam;
+import com.example.beautybook.dto.search.SearchParam;
 import com.example.beautybook.dto.mastercard.MasterCardDto;
 import com.example.beautybook.dto.mastercard.MasterCardResponseDto;
 import com.example.beautybook.dto.mastercard.MasterCardUpdateDto;

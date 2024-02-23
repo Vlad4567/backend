@@ -1,6 +1,6 @@
 package com.example.beautybook.service.impl;
 
-import com.example.beautybook.dto.SearchParam;
+import com.example.beautybook.dto.search.SearchParam;
 import com.example.beautybook.dto.mastercard.MasterCardDto;
 import com.example.beautybook.dto.mastercard.MasterCardResponseDto;
 import com.example.beautybook.dto.mastercard.MasterCardUpdateDto;
@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,6 @@ public class MasterCardServiceImpl implements MasterCardService {
         MasterCard masterCard = new MasterCard();
         masterCard.setUser(user);
         return masterCardMapper.toDto(masterCardRepository.save(masterCard));
-
     }
 
     @Override
@@ -79,11 +79,20 @@ public class MasterCardServiceImpl implements MasterCardService {
 
     @Override
     public Page<MasterCardResponseDto> searchMasterCard(SearchParam param) {
-
-        List<MasterCard> list = masterCardRepository.findAll(
-                masterCardSpecificationBuilder.build(param));
-        return null;
-
+        Pageable pageable = PageRequest.of(
+                param.page(),
+                param.sizePage(),
+                Sort.by(param.sort().direction(), param.sort().property())
+        );
+        Page<MasterCard> masterCards = masterCardRepository.findAll(
+                masterCardSpecificationBuilder.build(param.param()), pageable);
+        List<MasterCardResponseDto> dtoList = masterCards.stream()
+                .map(masterCardMapper::toResponseDto)
+                .toList();
+        return new PageImpl<>(
+                dtoList, masterCards.getPageable(),
+                masterCards.getTotalElements()
+        );
     }
 
     private User getAuthenticatedUser() {

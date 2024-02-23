@@ -5,10 +5,13 @@ import com.example.beautybook.dto.category.CategoryResponseDto;
 import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.mapper.CategoryMapper;
 import com.example.beautybook.model.Category;
+import com.example.beautybook.model.Subcategory;
 import com.example.beautybook.repository.categoty.CategoryRepository;
 import com.example.beautybook.service.CategoryService;
+import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -34,11 +37,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryResponseDto> getAllCategory() {
-        List<Category> listCategory = categoryRepository.findAll();
-        if (listCategory.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return listCategory.stream()
+        List<Category> categories = categoryRepository.findAll();
+        return categories.stream()
                 .map(categoryMapper::toResponseDto)
                 .toList();
     }

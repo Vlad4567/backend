@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
 import lombok.Getter;
@@ -43,7 +44,12 @@ public class User implements UserDetails {
     private String phone;
     private String profilePhoto;
     @ManyToMany
-    private Set<MasterCard> favorite;
+    @JoinTable(
+            name = "users_favorites",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "master_card_id")
+    )
+    private Set<MasterCard> favorite = new HashSet<>();
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
@@ -51,6 +57,10 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    public String getUserName() {
+        return username;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

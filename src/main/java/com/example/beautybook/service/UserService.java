@@ -11,4 +11,10 @@ public interface UserService {
     UserDto update(UserUpdateDto userUpdateDto);
 
     UserDto uploadProfilePhoto(MultipartFile file);
+
+    UserDto addFavoriteMasterCard(Long id);
+
+    UserDto deleteFavoriteMasterCard(Long id);
+
+    void forgotPassword(String email);
 }

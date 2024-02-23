@@ -1,5 +1,6 @@
-package com.example.beautybook.virusscanner;
+package com.example.beautybook.util.impl;
 
+import com.example.beautybook.util.VirusScannerUtil;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,10 +10,10 @@ import xyz.capybara.clamav.ClamavClient;
 import xyz.capybara.clamav.commands.scan.result.ScanResult;
 
 @Component
-public class VirusScannerServiceImpl implements VirusScannerService {
+public class VirusScannerUtilImpl implements VirusScannerUtil {
     private final ClamavClient clamavClient;
 
-    public VirusScannerServiceImpl(
+    public VirusScannerUtilImpl(
             @Value("${clamav.host}") String host,
             @Value("${clamav.port}") int port
     ) {

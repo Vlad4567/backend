@@ -1,6 +1,6 @@
 package com.example.beautybook.repository.mastercard;
 
-import com.example.beautybook.dto.SearchParam;
+import com.example.beautybook.dto.search.Param;
 import com.example.beautybook.model.MasterCard;
 import com.example.beautybook.repository.user.SpecificationBuilder;
 import com.example.beautybook.repository.user.SpecificationProviderManager;
@@ -14,29 +14,35 @@ public class MasterCardSpecificationBuilder implements SpecificationBuilder<Mast
     private final SpecificationProviderManager<MasterCard> providerManager;
 
     @Override
-    public Specification<MasterCard> build(SearchParam searchParam) {
+    public Specification<MasterCard> build(Param param) {
         Specification<MasterCard> spec = Specification.where(null);
-        if (searchParam.text() != null && !searchParam.text()[0].isBlank()) {
-            spec = spec.or(
-                    providerManager.getSpecificationProvider("firstName")
-                            .getSpecification(searchParam))
-                    .or(providerManager.getSpecificationProvider("lastName")
-                            .getSpecification(searchParam))
-                    .or(providerManager.getSpecificationProvider("subcategory")
-                            .getSpecification(searchParam));
+        if (!param.text().isBlank()) {
+            spec = spec.and(
+                    providerManager.getSpecificationProvider("name")
+                            .getSpecification(param)
+            );
         }
 
-        if (searchParam.price() != null || searchParam.category() != null) {
+        if (!param.category().isBlank()) {
             spec = spec.and(
-                    providerManager.getSpecificationProvider("priceAndCategory")
-                            .getSpecification(searchParam));
+                    providerManager.getSpecificationProvider("category")
+                            .getSpecification(param)
+            );
         }
-        if (searchParam.city() != null && searchParam.city().length > 0) {
+
+        if (!param.subcategory().isBlank()) {
+            spec = spec.and(
+                    providerManager.getSpecificationProvider("subcategory")
+                            .getSpecification(param)
+            );
+        }
+
+        if (!param.city().isBlank()) {
             spec = spec.and(
                     providerManager.getSpecificationProvider("city")
-                            .getSpecification(searchParam));
+                            .getSpecification(param)
+            );
         }
-
         return spec;
     }
 }
