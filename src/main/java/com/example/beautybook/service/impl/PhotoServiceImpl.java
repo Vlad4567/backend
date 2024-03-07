@@ -35,7 +35,7 @@ public class PhotoServiceImpl implements PhotoService {
     private int limitPhoto;
 
     @Override
-    public PhotoDto savePhoto(MultipartFile file) {
+    public PhotoDto savePhoto(MultipartFile file, Long subcategoryId) {
         MasterCard masterCard = getMasterCardAuthenticatedUser();
         if (masterCard.getGallery().size() >= limitPhoto) {
             throw new GalleryLimitExceededException(
@@ -47,7 +47,12 @@ public class PhotoServiceImpl implements PhotoService {
         if (virusScanner.scanFile(newPhotoPath) instanceof ScanResult.VirusFound) {
             throw new VirusDetectionException("Virus detected in the uploaded photo.");
         }
-        Photo newPhoto = new Photo(null, newPhotoPath, masterCard);
+        Photo newPhoto = new Photo(
+                null,
+                newPhotoPath,
+                masterCard,
+                subcategoryId
+        );
         if (masterCard.getGallery().isEmpty()) {
             masterCard.setMainPhoto(newPhoto);
         }

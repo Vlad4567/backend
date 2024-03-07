@@ -13,7 +13,7 @@ public class PasswordGeneratorUtilImpl implements PasswordGeneratorUtil {
     private static final String DIGITS = "0123456789";
     private static final String SPECIAL_CHARACTERS = "@#$%^&+=!";
     private static final int LENGTH_PASSWORD = 12;
-    private  static final Random RANDOM = new Random();
+    private static final Random RANDOM = new Random();
 
     @Override
     public String generateRandomPassword() {

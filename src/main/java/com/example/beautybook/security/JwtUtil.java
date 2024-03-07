@@ -16,22 +16,27 @@ import org.springframework.stereotype.Component;
 public class JwtUtil {
     private final Key secretKey;
     private final Key mailSecretKey;
+    private final Key refreshSecretKey;
 
     @Value("${jwt.expiration}")
     private long expiration;
+    @Value("${jwt.refresh.expiration}")
+    private long refreshExpiration;
 
     public JwtUtil(@Value("${jwt.secret}") String secretKey,
-                   @Value("${jwt.mail.verification.secret}") String mailSecretKey) {
+                   @Value("${jwt.mail.verification.secret}") String mailSecretKey,
+                   @Value("${jwt.refresh.secret}") String refreshSecretKey) {
         this.secretKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
         this.mailSecretKey = Keys.hmacShaKeyFor(mailSecretKey.getBytes(StandardCharsets.UTF_8));
-
+        this.refreshSecretKey =
+                Keys.hmacShaKeyFor(refreshSecretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(String username, Secret secret) {
         return Jwts.builder()
                    .setSubject(username)
                    .setIssuedAt(new Date(System.currentTimeMillis()))
-                   .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                   .setExpiration(new Date(System.currentTimeMillis() + getExpiration(secret)))
                    .signWith(getSecretKey(secret))
                    .compact();
     }
@@ -68,11 +73,22 @@ public class JwtUtil {
         if (secret.equals(Secret.AUTH)) {
             return secretKey;
         }
+        if (secret.equals(Secret.REFRESH)) {
+            return refreshSecretKey;
+        }
         return mailSecretKey;
+    }
+
+    private long getExpiration(Secret secret) {
+        if (secret.equals(Secret.REFRESH)) {
+            return refreshExpiration;
+        }
+        return expiration;
     }
 
     public enum Secret {
         AUTH,
-        MAIL
+        MAIL,
+        REFRESH
     }
 }

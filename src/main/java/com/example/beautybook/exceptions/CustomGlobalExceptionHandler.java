@@ -4,11 +4,11 @@ import com.example.beautybook.exceptions.photo.EmptyPhotoException;
 import com.example.beautybook.exceptions.photo.GalleryLimitExceededException;
 import com.example.beautybook.exceptions.photo.InvalidOriginFileNameException;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
+import jakarta.validation.ConstraintViolationException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,6 +24,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @ControllerAdvice
 public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
@@ -34,12 +35,19 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST);
-        List<String> errors =
-                ex.getBindingResult().getAllErrors().stream()
-                        .map(this::getErrorMessage)
-                        .toList();
+        Map<String, String> errors = new HashMap<>();
+        for (ObjectError error : ex.getBindingResult().getAllErrors()) {
+            String[] errorMessage = getErrorMessage(error);
+            errors.put(errorMessage[0], errorMessage[1]);
+        }
         body.put("errors", errors);
         return new ResponseEntity<>(body, headers, status);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Object> handleConstraintViolationException(
+            ConstraintViolationException ex) {
+        return getResponse(ex, 400);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
@@ -78,18 +86,14 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
     }
 
     @ExceptionHandler(GalleryLimitExceededException.class)
-    public ResponseEntity<Object> handleGalleryLimitExceededException
-            (
-                    GalleryLimitExceededException ex
-            ) {
+    public ResponseEntity<Object> handleGalleryLimitExceededException(
+            GalleryLimitExceededException ex) {
         return getResponse(ex, 400);
     }
 
     @ExceptionHandler(InvalidOriginFileNameException.class)
-    public ResponseEntity<Object> handleInvalidOriginFileNameException
-            (
-                    InvalidOriginFileNameException ex
-            ) {
+    public ResponseEntity<Object> handleInvalidOriginFileNameException(
+            InvalidOriginFileNameException ex) {
         return getResponse(ex, 400);
     }
 
@@ -98,20 +102,43 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return getResponse(ex, 401);
     }
 
-    private String getErrorMessage(ObjectError e) {
+    @ExceptionHandler(SQLIntegrityConstraintViolationException.class)
+    public ResponseEntity<Object> handleInvocationTargetException(
+            SQLIntegrityConstraintViolationException ex) {
+        return getResponse(ex, 401);
+    }
+
+    @ExceptionHandler(LoginException.class)
+    public ResponseEntity<Object> handleLoginException(LoginException ex) {
+        return getResponse(ex, 401);
+    }
+
+    private String[] getErrorMessage(ObjectError e) {
         if (e instanceof FieldError) {
             String field = ((FieldError) e).getField();
             String message = e.getDefaultMessage();
-            return field + " " + message;
+            return new String[]{field, message};
         }
-        return e.getDefaultMessage();
+        return new String[]{e.getDefaultMessage()};
     }
 
     private ResponseEntity<Object> getResponse(Exception ex, int statusCode) {
+        Object error = ex.getMessage();
+        if (ex instanceof RegistrationException) {
+            Map<String, String> errorMassage = new LinkedHashMap<>();
+            String[] lines = ex.getMessage().split(System.lineSeparator());
+            for (String line : lines) {
+                String[] parts = line.split(":");
+                if (parts.length == 2) {
+                    errorMassage.put(parts[0].trim(), parts[1].trim());
+                }
+            }
+            error = errorMassage;
+        }
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatusCode.valueOf(statusCode));
-        body.put("error", ex.getMessage());
+        body.put("error", error);
         return new ResponseEntity<>(body, HttpStatus.valueOf(statusCode));
     }
 }

@@ -1,14 +1,12 @@
 package com.example.beautybook.dto.search;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
-public record SearchParam(
-        @Min(0)
-        int page,
-        @Min(0)
-        int sizePage,
-        Param param,
-        SortParam sort
-) {
+@Data
+public class SearchParam {
+    private String text;
+    private Long city;
+    private Long[] subcategories;
+    private String minPrice;
+    private String maxPrice;
 }

@@ -6,6 +6,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import lombok.Data;
@@ -33,4 +34,7 @@ public class ServiceCard {
     @ManyToOne
     @JoinColumn(name = "master_card_id", referencedColumnName = "id")
     private MasterCard masterCard;
+    @OneToOne
+    @JoinColumn(name = "photo_id")
+    private Photo photo;
 }

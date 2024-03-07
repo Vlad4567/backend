@@ -8,10 +8,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 
 @Data
 @Entity
+@NoArgsConstructor
 public class Role implements GrantedAuthority {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,6 +24,10 @@ public class Role implements GrantedAuthority {
             nullable = false)
     @Enumerated(value = EnumType.STRING)
     private RoleName name;
+
+    public Role(Long id) {
+        this.id = id;
+    }
 
     @Override
     public String getAuthority() {

@@ -31,7 +31,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                   .cors(AbstractHttpConfigurer::disable)
+
                    .csrf(AbstractHttpConfigurer::disable)
                    .authorizeHttpRequests(
                        auth -> auth
@@ -43,11 +43,14 @@ public class SecurityConfig {
                                        "/masterSortByRating",
                                        "/master/**",
                                        "/mastercart/{id}/review",
-                                       "/mastercard/{id}/servicecard",
+                                       "/master/{id}/servicecard",
                                        "/categories",
                                        "/auth/verificationMail/{token}",
                                        "/servicecard/search",
-                                       "/city"
+                                       "/city",
+                                       "/getEmail",
+                                       "/forgot-password/{email}",
+                                       "/city/search"
                                    )
                                    .permitAll()
                                    .anyRequest()

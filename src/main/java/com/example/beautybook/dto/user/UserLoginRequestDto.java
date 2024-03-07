@@ -14,4 +14,5 @@ public class UserLoginRequestDto {
             regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$"
     )
     private String password;
+    private boolean remember;
 }

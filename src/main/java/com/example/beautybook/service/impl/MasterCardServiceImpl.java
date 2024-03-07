@@ -1,13 +1,19 @@
 package com.example.beautybook.service.impl;
 
-import com.example.beautybook.dto.search.SearchParam;
+import com.example.beautybook.dto.Statistics;
+import com.example.beautybook.dto.category.SubcategoryResponseDto;
+import com.example.beautybook.dto.mastercard.MasterCardCreateDto;
 import com.example.beautybook.dto.mastercard.MasterCardDto;
 import com.example.beautybook.dto.mastercard.MasterCardResponseDto;
 import com.example.beautybook.dto.mastercard.MasterCardUpdateDto;
+import com.example.beautybook.dto.search.SearchParam;
 import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.mapper.MasterCardMapper;
+import com.example.beautybook.mapper.SubcategoryMapper;
 import com.example.beautybook.model.MasterCard;
+import com.example.beautybook.model.Subcategory;
 import com.example.beautybook.model.User;
+import com.example.beautybook.repository.categoty.SubcategoryRepository;
 import com.example.beautybook.repository.mastercard.MasterCardRepository;
 import com.example.beautybook.repository.user.SpecificationBuilder;
 import com.example.beautybook.repository.user.UserRepository;
@@ -19,25 +25,28 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 public class MasterCardServiceImpl implements MasterCardService {
     private final UserRepository userRepository;
     private final MasterCardRepository masterCardRepository;
+    private final SubcategoryRepository subcategoryRepository;
     private final MasterCardMapper masterCardMapper;
+    private final SubcategoryMapper subcategoryMapper;
     private final SpecificationBuilder<MasterCard> masterCardSpecificationBuilder;
 
     @Override
     @Transactional
-    public MasterCardDto createNewMasterCard() {
+    public MasterCardDto createNewMasterCard(MasterCardCreateDto dto, MultipartFile file) {
         User user = getAuthenticatedUser();
-        MasterCard masterCard = new MasterCard();
+        MasterCard masterCard = masterCardMapper.toModel(dto);
         masterCard.setUser(user);
+        masterCard.setId(user.getId());
         return masterCardMapper.toDto(masterCardRepository.save(masterCard));
     }
 
@@ -58,7 +67,10 @@ public class MasterCardServiceImpl implements MasterCardService {
     @Override
     public MasterCardDto getUserMasterCard() {
         MasterCard masterCard = getAuthenticatedUserMasterCard();
-        return masterCardMapper.toDto(masterCard);
+        MasterCardDto dto = masterCardMapper.toDto(masterCard);
+        dto.setStatistics(
+                new Statistics(masterCardRepository.getCountsByGrade(masterCard.getId())));
+        return dto;
     }
 
     @Override
@@ -73,19 +85,17 @@ public class MasterCardServiceImpl implements MasterCardService {
         MasterCard masterCard = masterCardRepository.findMasterCardById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Not found Master card by id: " + id)
+
                 );
-        return masterCardMapper.toDto(masterCard);
+        MasterCardDto dto = masterCardMapper.toDto(masterCard);
+        dto.setStatistics(new Statistics(masterCardRepository.getCountsByGrade(id)));
+        return dto;
     }
 
     @Override
-    public Page<MasterCardResponseDto> searchMasterCard(SearchParam param) {
-        Pageable pageable = PageRequest.of(
-                param.page(),
-                param.sizePage(),
-                Sort.by(param.sort().direction(), param.sort().property())
-        );
+    public Page<MasterCardResponseDto> searchMasterCard(SearchParam param, Pageable pageable) {
         Page<MasterCard> masterCards = masterCardRepository.findAll(
-                masterCardSpecificationBuilder.build(param.param()), pageable);
+                masterCardSpecificationBuilder.build(param), pageable);
         List<MasterCardResponseDto> dtoList = masterCards.stream()
                 .map(masterCardMapper::toResponseDto)
                 .toList();
@@ -93,6 +103,21 @@ public class MasterCardServiceImpl implements MasterCardService {
                 dtoList, masterCards.getPageable(),
                 masterCards.getTotalElements()
         );
+    }
+
+    @Transactional
+    @Override
+    public List<SubcategoryResponseDto> addSubcategory(Long id) {
+        Subcategory subcategory = subcategoryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Not found subcategory by id " + id)
+                );
+        MasterCard masterCard = getAuthenticatedUserMasterCard();
+        masterCard.getSubcategories().add(subcategory);
+        masterCardRepository.save(masterCard);
+        return masterCard.getSubcategories().stream()
+                .map(subcategoryMapper::toResponseDto)
+                .toList();
     }
 
     private User getAuthenticatedUser() {

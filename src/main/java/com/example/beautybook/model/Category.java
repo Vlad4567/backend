@@ -1,26 +1,20 @@
 package com.example.beautybook.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.Set;
+import java.util.List;
 import lombok.Data;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
 @Table(name = "categories")
+@NoArgsConstructor
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +27,10 @@ public class Category {
     private String name;
     @Column(name = "description")
     private String description;
-    @OneToMany(mappedBy = "category",fetch = FetchType.EAGER,cascade = CascadeType.ALL)
-    @JsonIgnoreProperties("category")
-    private Set<Subcategory> subcategories;
+    @OneToMany(mappedBy = "category")
+    private List<Subcategory> subcategories;
+
+    public Category(Long id) {
+        this.id = id;
+    }
 }

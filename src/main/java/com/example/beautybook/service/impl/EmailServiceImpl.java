@@ -1,6 +1,6 @@
 package com.example.beautybook.service.impl;
 
-import com.example.beautybook.model.User;
+import com.example.beautybook.dto.DataForMailDto;
 import com.example.beautybook.security.JwtUtil;
 import com.example.beautybook.service.EmailService;
 import com.example.beautybook.util.EmailSenderUtil;
@@ -19,32 +19,42 @@ public class EmailServiceImpl implements EmailService {
     private final JwtUtil jwtUtil;
 
     @Override
-    public void sendMail(User user, String emailType) {
-        String[] body = generateTextEmail(user, emailType);
-        emailSenderUtil.sendEmail(user.getEmail(), body[0], body[1]);
+    public void sendMail(DataForMailDto dto) {
+        String[] body = generateTextEmail(dto);
+        emailSenderUtil.sendEmail(dto.getEmail(), body[0], body[1]);
     }
 
-    private String[] generateTextEmail(User user, String emailType) {
+    private String[] generateTextEmail(DataForMailDto dto) {
         String greeting = "Hello, "
-                + user.getUserName()
+                + dto.getUsername()
                 + System.lineSeparator()
                 + System.lineSeparator();
         String message = "";
         String subject = "";
-        switch (emailType) {
+        switch (dto.getEmailType()) {
             case "verification":
                 subject = "Verification email";
                 message = "To verify your email, please follow the link below: "
                         + System.lineSeparator() + System.lineSeparator()
-                        + host + contextPath + "/auth/verificationMail/"
-                        + jwtUtil.generateToken(user.getEmail(), JwtUtil.Secret.MAIL);
+                        + host + contextPath + "/auth/updateMail/"
+                        + jwtUtil.generateToken(dto.getEmail(), JwtUtil.Secret.MAIL);
                 break;
             case "passwordReset":
                 subject = "Password Reset";
                 message = "You are receiving this email because you "
                         + "have requested a password reset for your account"
                         + System.lineSeparator() + System.lineSeparator()
-                        + "Your new temporary password: " + user.getPassword();
+                        + "Your new temporary password: " + dto.getNewPassword();
+                break;
+            case "updateEmail":
+                subject = "Update email";
+                message = "To change the current Email to "
+                        + dto.getNewEmail() + "follow this link: "
+                        + System.lineSeparator() + System.lineSeparator()
+                        + host + contextPath + "/auth/verificationMail/"
+                        + jwtUtil.generateToken(
+                                dto.getEmail() + ":" + dto.getNewEmail(),
+                                JwtUtil.Secret.MAIL);
                 break;
             default:
                 break;

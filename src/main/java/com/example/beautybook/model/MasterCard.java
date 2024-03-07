@@ -3,8 +3,6 @@ package com.example.beautybook.model;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -26,7 +24,6 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(exclude = {"gallery", "reviews"})
 public class MasterCard {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -89,6 +86,10 @@ public class MasterCard {
 
     private String firstName;
     private String lastName;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "contacts_id")
+    private Contacts contacts;
 
     public MasterCard(Long id) {
         this.id = id;

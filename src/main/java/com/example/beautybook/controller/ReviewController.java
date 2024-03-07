@@ -5,8 +5,10 @@ import com.example.beautybook.dto.review.ReviewDto;
 import com.example.beautybook.dto.review.ReviewUpdateDto;
 import com.example.beautybook.service.ReviewService;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +16,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@CrossOrigin(
+        origins = "*",
+        allowedHeaders = {"Content-Type", "Authorization"})
 @RequiredArgsConstructor
 @RestController
 public class ReviewController {
@@ -42,8 +47,8 @@ public class ReviewController {
     }
 
     @GetMapping("/mastercart/{id}/review")
-    List<ReviewDto> getAllByMasterCardId(@PathVariable Long id) {
-        return reviewService.getAllByMasterCardId(id);
+    Page<ReviewDto> getAllByMasterCardId(@PathVariable Long id, Pageable pageable) {
+        return reviewService.getAllByMasterCardId(id, pageable);
     }
     ///delete
 }
