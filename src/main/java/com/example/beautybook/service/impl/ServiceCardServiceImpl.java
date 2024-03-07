@@ -16,9 +16,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -46,16 +44,11 @@ public class ServiceCardServiceImpl implements ServiceCardService {
     }
 
     @Override
-    public Page<ServiceCardSearchDto> search(SearchParam param) {
-        Pageable pageable = PageRequest.of(
-                param.page(),
-                param.sizePage(),
-                Sort.by(param.sort().direction(), param.sort().property())
-        );
+    public Page<ServiceCardSearchDto> search(SearchParam param, Pageable pageable) {
         Page<ServiceCard> serviceCards =
                 serviceCardRepository.findAll(
-                        specificationBuilder.build(param.param()), pageable);
-        List<ServiceCardSearchDto> listDto = serviceCards.stream()
+                        specificationBuilder.build(param), pageable);
+        List<ServiceCardSearchDto> listDto = serviceCards.getContent().stream()
                 .map(serviceCardMapper::toSearchDto)
                 .toList();
         return new PageImpl<>(
@@ -63,6 +56,16 @@ public class ServiceCardServiceImpl implements ServiceCardService {
                 serviceCards.getPageable(),
                 serviceCards.getTotalElements()
         );
+    }
+
+    @Override
+    public List<ServiceCardDto> getAllByMasterCardIdAndSubcategoryId(
+            Long masterId, Long subcategoryId) {
+        List<ServiceCard> serviceCards = serviceCardRepository
+                .findAllByMasterCardIdAndSubcategoryId(masterId, subcategoryId);
+        return serviceCards.stream()
+                .map(serviceCardMapper::toDto)
+                .toList();
     }
 
     private MasterCard getMasterCardAuthenticatedUser() {

@@ -1,5 +1,6 @@
 package com.example.beautybook.service;
 
+import com.example.beautybook.dto.user.ResetPasswordDto;
 import com.example.beautybook.dto.user.UserDto;
 import com.example.beautybook.dto.user.UserRegistrationDto;
 import com.example.beautybook.dto.user.UserUpdateDto;
@@ -16,5 +17,13 @@ public interface UserService {
 
     UserDto deleteFavoriteMasterCard(Long id);
 
+    UserDto getAuthenticationUser();
+
+    UserDto resetPassword(ResetPasswordDto resetPasswordDto);
+
     void forgotPassword(String email);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByUsername(String username);
 }

@@ -10,7 +10,6 @@ import lombok.Data;
 public class MasterCardUpdateDto {
     @NotBlank
     private String firstName;
-    @NotBlank
     private String lastName;
     @NotNull
     private AddressDto address;

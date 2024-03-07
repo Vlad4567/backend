@@ -1,6 +1,6 @@
 package com.example.beautybook.repository.mastercard;
 
-import com.example.beautybook.dto.search.Param;
+import com.example.beautybook.dto.search.SearchParam;
 import com.example.beautybook.model.MasterCard;
 import com.example.beautybook.repository.user.SpecificationBuilder;
 import com.example.beautybook.repository.user.SpecificationProviderManager;
@@ -14,30 +14,23 @@ public class MasterCardSpecificationBuilder implements SpecificationBuilder<Mast
     private final SpecificationProviderManager<MasterCard> providerManager;
 
     @Override
-    public Specification<MasterCard> build(Param param) {
+    public Specification<MasterCard> build(SearchParam param) {
         Specification<MasterCard> spec = Specification.where(null);
-        if (!param.text().isBlank()) {
+        if (param.getText() != null && !param.getText().isBlank()) {
             spec = spec.and(
                     providerManager.getSpecificationProvider("name")
                             .getSpecification(param)
             );
         }
 
-        if (!param.category().isBlank()) {
-            spec = spec.and(
-                    providerManager.getSpecificationProvider("category")
-                            .getSpecification(param)
-            );
-        }
-
-        if (!param.subcategory().isBlank()) {
+        if (param.getSubcategories() != null) {
             spec = spec.and(
                     providerManager.getSpecificationProvider("subcategory")
                             .getSpecification(param)
             );
         }
 
-        if (!param.city().isBlank()) {
+        if (param.getCity() != null) {
             spec = spec.and(
                     providerManager.getSpecificationProvider("city")
                             .getSpecification(param)

@@ -1,6 +1,5 @@
 package com.example.beautybook.repository.servicecard;
 
-import com.example.beautybook.dto.search.Param;
 import com.example.beautybook.dto.search.SearchParam;
 import com.example.beautybook.model.ServiceCard;
 import com.example.beautybook.repository.user.SpecificationBuilder;
@@ -15,28 +14,22 @@ public class ServiceCardSpecificationBuilder implements SpecificationBuilder<Ser
     private final SpecificationProviderManager<ServiceCard> providerManager;
 
     @Override
-    public Specification<ServiceCard> build(Param param) {
+    public Specification<ServiceCard> build(SearchParam param) {
         Specification<ServiceCard> spec = Specification.where(null);
 
-        if (!param.text().isBlank()) {
+        if (param.getText() != null && !param.getText().isBlank()) {
             spec = spec.and(
                     providerManager.getSpecificationProvider("name")
                             .getSpecification(param));
         }
 
-        if (!param.city().isBlank()) {
+        if (param.getCity() != null) {
             spec = spec.and(
                     providerManager.getSpecificationProvider("city")
                             .getSpecification(param));
         }
 
-        if (!param.category().isBlank()) {
-            spec = spec.and(
-                    providerManager.getSpecificationProvider("category")
-                            .getSpecification(param));
-        }
-
-        if (!param.subcategory().isBlank()) {
+        if (param.getSubcategories() != null) {
             spec = spec.and(
                     providerManager.getSpecificationProvider("subcategory")
                             .getSpecification(param));

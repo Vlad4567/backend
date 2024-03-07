@@ -21,12 +21,11 @@ public interface SubcategoryMapper {
     SubcategoryResponseDto toResponseDto(Subcategory subcategory);
 
     @AfterMapping
-    default void setCategoryByCategoryId(
-            @MappingTarget Subcategory subcategory,
-            SubcategoryDto dto) {
-        Category category = new Category();
-        category.setId(dto.getCategoryId());
-        subcategory.setCategory(category);
+    default void setCategoryById(
+            @MappingTarget
+            Subcategory subcategory,
+            SubcategoryDto subcategoryDto
+    ) {
+        subcategory.setCategory(new Category(subcategoryDto.getCategoryId()));
     }
-
 }

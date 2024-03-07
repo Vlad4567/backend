@@ -15,7 +15,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
-import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -34,15 +33,14 @@ public class User implements UserDetails {
     private String email;
     @Column(name = "passwords")
     private String password;
-    @Getter
     @Column(
             name = "username",
             nullable = false,
             unique = true
     )
     private String username;
-    private String phone;
     private String profilePhoto;
+    private String refreshToken;
     @ManyToMany
     @JoinTable(
             name = "users_favorites",

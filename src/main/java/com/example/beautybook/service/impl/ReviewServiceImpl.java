@@ -13,12 +13,14 @@ import com.example.beautybook.repository.mastercard.MasterCardRepository;
 import com.example.beautybook.repository.mastercard.ReviewRepository;
 import com.example.beautybook.repository.user.UserRepository;
 import com.example.beautybook.service.ReviewService;
+import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Set;
-import javax.security.auth.login.AccountException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewMapper reviewMapper;
     private final ReviewRepository reviewRepository;
 
+    @Transactional
     @Override
     public ReviewDto createReview(Long id, ReviewCreateDto createDto) {
         User user = getAuthenticatedUser();
@@ -38,7 +41,7 @@ public class ReviewServiceImpl implements ReviewService {
         newReview.setMasterCard(new MasterCard(id));
         newReview.setUser(user);
         Review review = reviewRepository.save(newReview);
-        updateMasterCardRating(review.getMasterCard());
+        updateMasterCardRating(id);
         return reviewMapper.toDto(review);
     }
 
@@ -52,23 +55,22 @@ public class ReviewServiceImpl implements ReviewService {
         }
         reviewMapper.updateReviewFromDto(reviewUpdateDto, review);
         review = reviewRepository.save(review);
-        updateMasterCardRating(review.getMasterCard());
+        updateMasterCardRating(review.getMasterCard().getId());
         return reviewMapper.toDto(review);
     }
 
     @Override
-    public List<ReviewDto> getAllByMasterCardId(Long id) {
-        return reviewRepository.findAllByMasterCardId(id).stream()
-                .map(reviewMapper::toDto)
-                .toList();
+    public Page<ReviewDto> getAllByMasterCardId(Long id, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findAllByMasterCardId(id, pageable);
+        List<ReviewDto> list = reviews.getContent().stream().map(reviewMapper::toDto).toList();
+        return new PageImpl<>(list, reviews.getPageable(), reviews.getTotalElements());
     }
 
-    private void updateMasterCardRating(MasterCard masterCard) {
+    private void updateMasterCardRating(Long masterCardId) {
         BigDecimal averageRating =
-                BigDecimal.valueOf(reviewRepository.getAverageRatingByMasterId(masterCard.getId()))
+                BigDecimal.valueOf(reviewRepository.getAverageRatingByMasterId(masterCardId))
                         .setScale(1, RoundingMode.HALF_UP);
-        masterCard.setRating(averageRating);
-        masterCardRepository.save(masterCard);
+        masterCardRepository.updateRating(masterCardId, averageRating);
     }
 
     private User getAuthenticatedUser() {

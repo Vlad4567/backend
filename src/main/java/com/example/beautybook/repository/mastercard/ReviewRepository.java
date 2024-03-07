@@ -1,7 +1,8 @@
 package com.example.beautybook.repository.mastercard;
 
 import com.example.beautybook.model.Review;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,8 +15,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Review save(Review review);
 
     @EntityGraph(attributePaths = {"masterCard", "user"})
-    List<Review> findAllByMasterCardId(Long id);
+    Page<Review> findAllByMasterCardId(Long id, Pageable pageable);
 
-    @Query("SELECT AVG(r.grade) FROM Review r WHERE r.masterCard = :masterId")
+    @Query("SELECT AVG(r.grade) FROM Review r WHERE r.masterCard.id = :masterId")
     Double getAverageRatingByMasterId(@Param("masterId") Long masterId);
 }
