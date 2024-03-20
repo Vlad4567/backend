@@ -11,7 +11,7 @@ public interface UserService {
 
     UserDto update(UserUpdateDto userUpdateDto);
 
-    UserDto uploadProfilePhoto(MultipartFile file);
+    String uploadProfilePhoto(MultipartFile file);
 
     UserDto addFavoriteMasterCard(Long id);
 
@@ -26,4 +26,8 @@ public interface UserService {
     boolean existsByEmail(String email);
 
     boolean existsByUsername(String username);
+
+    void updateEmail(String token);
+
+    void verificationNewMail(String token);
 }

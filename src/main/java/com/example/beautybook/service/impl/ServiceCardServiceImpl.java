@@ -4,6 +4,7 @@ import com.example.beautybook.dto.search.SearchParam;
 import com.example.beautybook.dto.servicecard.ServiceCardCreateDto;
 import com.example.beautybook.dto.servicecard.ServiceCardDto;
 import com.example.beautybook.dto.servicecard.ServiceCardSearchDto;
+import com.example.beautybook.exceptions.AccessDeniedException;
 import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.mapper.ServiceCardMapper;
 import com.example.beautybook.model.MasterCard;
@@ -66,6 +67,32 @@ public class ServiceCardServiceImpl implements ServiceCardService {
         return serviceCards.stream()
                 .map(serviceCardMapper::toDto)
                 .toList();
+    }
+
+    @Override
+    public void deleteServiceCard(Long id) {
+        Long masterCardId = getMasterCardAuthenticatedUser().getId();
+        ServiceCard serviceCard = serviceCardRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Not found service card by id " + id));
+        if (!serviceCard.getMasterCard().getId().equals(masterCardId)) {
+            throw new AccessDeniedException("The authorized user does not have "
+                    + "a service card by ID " + id);
+        }
+        serviceCard.setIsDeleted(true);
+        serviceCardRepository.save(serviceCard);
+    }
+
+    @Override
+    public ServiceCardDto updateServiceCard(Long id, ServiceCardCreateDto dto) {
+        Long masterCardId = getMasterCardAuthenticatedUser().getId();
+        ServiceCard serviceCard = serviceCardRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Not found service card by id " + id));
+        if (!serviceCard.getMasterCard().getId().equals(masterCardId)) {
+            throw new AccessDeniedException("The authorized user does not have "
+                    + "a service card by ID " + id);
+        }
+        serviceCardMapper.updateServiceCardForDto(serviceCard, dto);
+        return serviceCardMapper.toDto(serviceCardRepository.save(serviceCard));
     }
 
     private MasterCard getMasterCardAuthenticatedUser() {

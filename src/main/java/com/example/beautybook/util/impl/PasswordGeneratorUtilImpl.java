@@ -2,8 +2,8 @@ package com.example.beautybook.util.impl;
 
 import com.example.beautybook.util.PasswordGeneratorUtil;
 import java.util.Random;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,8 +12,13 @@ public class PasswordGeneratorUtilImpl implements PasswordGeneratorUtil {
     private static final String UPPERCASE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final String DIGITS = "0123456789";
     private static final String SPECIAL_CHARACTERS = "@#$%^&+=!";
-    private static final int LENGTH_PASSWORD = 12;
-    private static final Random RANDOM = new Random();
+    private static final int LENGTH_PASSWORD = 8;
+    private static Random RANDOM;
+
+    @Autowired
+    public PasswordGeneratorUtilImpl(Random random) {
+        RANDOM = random;
+    }
 
     @Override
     public String generateRandomPassword() {
@@ -24,22 +29,26 @@ public class PasswordGeneratorUtilImpl implements PasswordGeneratorUtil {
         StringBuilder randomPassword = new StringBuilder();
         for (int i = 0; i < LENGTH_PASSWORD; i++) {
             int random = RANDOM.nextInt(allSymbol.length());
-            randomPassword.append(allSymbol.indexOf(random));
+            randomPassword.append(allSymbol.charAt(random));
         }
-        return insertRandomSpecialCharacter(randomPassword.toString());
+        return insertRandomSpecialCharacter(randomPassword);
     }
 
-    private String insertRandomSpecialCharacter(String password) {
-        String regex = ".*[" + Pattern.quote(SPECIAL_CHARACTERS) + "].*";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(password);
-        if (!matcher.matches()) {
-            int randomIndex = RANDOM.nextInt(password.length());
-            int randomSymbol = RANDOM.nextInt(SPECIAL_CHARACTERS.length());
-            return password.substring(0, randomIndex)
-                    + SPECIAL_CHARACTERS.indexOf(randomSymbol)
-                    + password.substring(randomIndex + 1);
+    private String insertRandomSpecialCharacter(StringBuilder password) {
+        String[] characters = new String[]{
+                SPECIAL_CHARACTERS,
+                LOWERCASE_CHARACTERS,
+                UPPERCASE_CHARACTERS,
+                DIGITS
+        };
+        for (String chars : characters) {
+            String regex = ".*[" + Pattern.quote(chars) + "].*";
+            Pattern pattern = Pattern.compile(regex);
+            if (!pattern.matcher(password).matches()) {
+                int randomSymbol = RANDOM.nextInt(chars.length());
+                password.append(chars.charAt(randomSymbol));
+            }
         }
-        return password;
+        return password.toString();
     }
 }

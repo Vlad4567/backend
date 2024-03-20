@@ -4,6 +4,7 @@ import com.example.beautybook.config.MapperConfig;
 import com.example.beautybook.dto.servicecard.ServiceCardCreateDto;
 import com.example.beautybook.dto.servicecard.ServiceCardDto;
 import com.example.beautybook.dto.servicecard.ServiceCardSearchDto;
+import com.example.beautybook.model.Photo;
 import com.example.beautybook.model.ServiceCard;
 import com.example.beautybook.model.Subcategory;
 import org.mapstruct.AfterMapping;
@@ -24,15 +25,19 @@ public interface ServiceCardMapper {
     ServiceCardDto toDto(ServiceCard serviceCard);
 
     @Mapping(target = "subcategory", ignore = true)
+    @Mapping(target = "photo", ignore = true)
     ServiceCard toModel(ServiceCardCreateDto serviceCardCreateDto);
 
     @Mapping(target = "subcategory", source = "subcategory.name")
     ServiceCardSearchDto toSearchDto(ServiceCard serviceCard);
 
+    void updateServiceCardForDto(@MappingTarget ServiceCard serviceCard, ServiceCardCreateDto dto);
+
     @AfterMapping
-    default void setSubcategory(
+    default void setSubcategoryAndPhoto(
             @MappingTarget ServiceCard serviceCard,
             ServiceCardCreateDto dto) {
         serviceCard.setSubcategory(new Subcategory(dto.getSubcategoryId()));
+        serviceCard.setPhoto(new Photo(dto.getPhotoId()));
     }
 }

@@ -15,13 +15,21 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @CrossOrigin(
         origins = "*",
-        allowedHeaders = {"Content-Type", "Authorization"})
+        allowedHeaders = {"Content-Type", "Authorization"},
+        methods = {
+                RequestMethod.GET,
+                RequestMethod.POST,
+                RequestMethod.PUT,
+                RequestMethod.DELETE,
+                RequestMethod.OPTIONS}
+)
 @RequiredArgsConstructor
 @RestController
 public class UserController {
@@ -29,7 +37,7 @@ public class UserController {
     private final UserRepository userRepository;
 
     @PostMapping("/profilePhoto")
-    public UserDto uploadProfilePhoto(
+    public String uploadProfilePhoto(
             @RequestParam("file")
             @Valid
             @ImageFile
@@ -48,7 +56,7 @@ public class UserController {
         return userService.deleteFavoriteMasterCard(id);
     }
 
-    @PutMapping("/updateUser")
+    @PutMapping("/user")
     public UserDto update(@RequestBody @Valid UserUpdateDto userUpdateDto) {
         return userService.update(userUpdateDto);
     }
@@ -66,5 +74,17 @@ public class UserController {
     @PutMapping("/reset-password")
     public UserDto resetPassword(@RequestBody @Valid ResetPasswordDto resetPasswordDto) {
         return userService.resetPassword(resetPasswordDto);
+    }
+
+    @GetMapping("/user/updateEmail/{token}")
+    public String updateEmail(@PathVariable String token) {
+        userService.updateEmail(token);
+        return "ok";
+    }
+
+    @GetMapping("/user/verificationNewMail/{token}")
+    public String verificationNewMail(@PathVariable String token) {
+        userService.verificationNewMail(token);
+        return "ok";
     }
 }

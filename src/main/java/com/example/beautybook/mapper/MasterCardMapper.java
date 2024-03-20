@@ -2,10 +2,12 @@ package com.example.beautybook.mapper;
 
 import com.example.beautybook.config.MapperConfig;
 import com.example.beautybook.dto.mastercard.MasterCardCreateDto;
+import com.example.beautybook.dto.mastercard.MasterCardCreateResponseDto;
 import com.example.beautybook.dto.mastercard.MasterCardDto;
 import com.example.beautybook.dto.mastercard.MasterCardPreviewDto;
 import com.example.beautybook.dto.mastercard.MasterCardResponseDto;
 import com.example.beautybook.dto.mastercard.MasterCardUpdateDto;
+import com.example.beautybook.dto.mastercard.MasterCardUpdateResponseDto;
 import com.example.beautybook.model.MasterCard;
 import com.example.beautybook.model.Subcategory;
 import com.example.beautybook.model.User;
@@ -32,6 +34,10 @@ public interface MasterCardMapper {
 
     MasterCardDto toDto(MasterCard masterCard);
 
+    MasterCardUpdateResponseDto toUpdateResponseDto(MasterCard masterCard);
+
+    MasterCardCreateResponseDto toCreateResponseDto(MasterCard masterCard);
+
     MasterCardPreviewDto toPreviewDto(MasterCard masterCard);
 
     @Mapping(target = "subcategories", ignore = true)
@@ -52,10 +58,12 @@ public interface MasterCardMapper {
             MasterCard masterCard,
             MasterCardCreateDto dto
     ) {
-        masterCard.setSubcategories(
-                dto.getSubcategories().stream()
-                        .map(Subcategory::new)
-                        .collect(Collectors.toSet())
-        );
+        if (dto.getSubcategories() != null) {
+            masterCard.setSubcategories(
+                    dto.getSubcategories().stream()
+                            .map(Subcategory::new)
+                            .collect(Collectors.toSet())
+            );
+        }
     }
 }

@@ -1,6 +1,12 @@
 package com.example.beautybook.dto;
 
+import lombok.Data;
 import org.springframework.data.domain.Sort;
 
-public record PageableDto(int page, int size, Sort.Direction direction, String property) {
+@Data
+public class PageableDto {
+    private int page;
+    private int size;
+    private Sort.Direction direction;
+    private String property;
 }

@@ -11,13 +11,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
 @Table(name = "photos")
 @AllArgsConstructor
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class Photo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,4 +28,8 @@ public class Photo {
     @JoinColumn(name = "master_card_id")
     private MasterCard masterCard;
     private Long subcategoryId;
+
+    public Photo(Long id) {
+        this.id = id;
+    }
 }
