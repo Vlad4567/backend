@@ -26,10 +26,10 @@ public class PriceScSpecification implements SpecificationProvider<ServiceCard> 
                 new BigDecimal(0),
                 new BigDecimal(Integer.MAX_VALUE)
         };
-        if (!minPrice.isBlank()) {
+        if (minPrice != null && !minPrice.isBlank()) {
             minMaxPrice[0] = new BigDecimal(minPrice);
         }
-        if (!maxPrice.isBlank()) {
+        if (maxPrice != null && !maxPrice.isBlank()) {
             minMaxPrice[1] = new BigDecimal(maxPrice);
         }
         return minMaxPrice;

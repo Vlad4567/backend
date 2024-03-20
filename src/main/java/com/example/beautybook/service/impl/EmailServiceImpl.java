@@ -36,7 +36,7 @@ public class EmailServiceImpl implements EmailService {
                 subject = "Verification email";
                 message = "To verify your email, please follow the link below: "
                         + System.lineSeparator() + System.lineSeparator()
-                        + host + contextPath + "/auth/updateMail/"
+                        + host + contextPath + "/auth/verificationMail/"
                         + jwtUtil.generateToken(dto.getEmail(), JwtUtil.Secret.MAIL);
                 break;
             case "passwordReset":
@@ -44,17 +44,24 @@ public class EmailServiceImpl implements EmailService {
                 message = "You are receiving this email because you "
                         + "have requested a password reset for your account"
                         + System.lineSeparator() + System.lineSeparator()
-                        + "Your new temporary password: " + dto.getNewPassword();
+                        + "Your new temporary password: " + dto.getNewData();
                 break;
             case "updateEmail":
                 subject = "Update email";
                 message = "To change the current Email to "
-                        + dto.getNewEmail() + "follow this link: "
+                        + dto.getNewData() + "follow this link: "
                         + System.lineSeparator() + System.lineSeparator()
-                        + host + contextPath + "/auth/verificationMail/"
+                        + host + contextPath + "/user/updateEmail/"
                         + jwtUtil.generateToken(
-                                dto.getEmail() + ":" + dto.getNewEmail(),
+                                dto.getEmail() + ":" + dto.getNewData(),
                                 JwtUtil.Secret.MAIL);
+                break;
+            case "verificationNewEmail":
+                subject = "Verification new email";
+                message = "To verify your email, please follow the link below: "
+                        + System.lineSeparator() + System.lineSeparator()
+                        + host + contextPath + "/user/verificationNewMail/"
+                        + jwtUtil.generateToken(dto.getNewData(), JwtUtil.Secret.MAIL);
                 break;
             default:
                 break;

@@ -14,4 +14,5 @@ public class ServiceCardCreateDto {
     private int duration;
     @NotNull
     private Long subcategoryId;
+    private Long photoId;
 }

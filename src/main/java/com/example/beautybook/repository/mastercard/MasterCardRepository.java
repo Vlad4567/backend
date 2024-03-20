@@ -17,14 +17,17 @@ import org.springframework.stereotype.Repository;
 public interface MasterCardRepository extends JpaRepository<MasterCard, Long>,
         JpaSpecificationExecutor<MasterCard> {
     @EntityGraph(attributePaths = {"gallery","subcategories", "mainPhoto",
-            "address", "location", "contacts"})
+            "address", "address.city", "location", "contacts"})
     Optional<MasterCard> findByUserEmail(String email);
 
     @EntityGraph(attributePaths = {"gallery", "subcategories", "contacts",
-            "mainPhoto", "address", "location"})
-    Optional<MasterCard> findMasterCardById(Long id);
+            "mainPhoto", "address", "address.city", "location"})
+    Optional<MasterCard> findMasterCardByIdAndIsHiddenFalse(Long id);
 
-    @EntityGraph(attributePaths = {"address", "mainPhoto"})
+    @Query("FROM MasterCard m "
+            + "LEFT JOIN m.address a "
+            + "LEFT JOIN m.mainPhoto mp "
+            + "WHERE m.isHidden = FALSE")
     Page<MasterCard> findAllByOrderByRatingDesc(Pageable pageable);
 
     @Modifying
@@ -40,4 +43,6 @@ public interface MasterCardRepository extends JpaRepository<MasterCard, Long>,
             + "FROM MasterCard m " + "LEFT JOIN m.reviews r "
             + "WHERE m.id = :id")
     Map<String, Long> getCountsByGrade(Long id);
+
+    boolean existsByUserEmail(String email);
 }

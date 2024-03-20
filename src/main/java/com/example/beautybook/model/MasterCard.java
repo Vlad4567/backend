@@ -3,6 +3,8 @@ package com.example.beautybook.model;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -17,13 +19,16 @@ import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 @Data
 @Entity
 @NoArgsConstructor
-@EqualsAndHashCode(exclude = {"gallery", "reviews"})
+@EqualsAndHashCode(exclude = {"gallery", "reviews", "mainPhoto"})
+@SQLRestriction("is_deleted=false")
 public class MasterCard {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -90,6 +95,19 @@ public class MasterCard {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "contacts_id")
     private Contacts contacts;
+    @Column(
+            name = "is_hidden",
+            nullable = false,
+            columnDefinition = "BOOLEAN DEFAULT false"
+    )
+    private boolean isHidden;
+
+    @Column(
+            name = "is_deleted",
+            nullable = false,
+            columnDefinition = "BOOLEAN DEFAULT false"
+    )
+    private boolean isDeleted;
 
     public MasterCard(Long id) {
         this.id = id;

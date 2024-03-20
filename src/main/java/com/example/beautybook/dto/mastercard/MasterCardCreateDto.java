@@ -2,7 +2,7 @@ package com.example.beautybook.dto.mastercard;
 
 import com.example.beautybook.dto.address.AddressDto;
 import com.example.beautybook.dto.contact.ContactDto;
-import com.example.beautybook.dto.servicecard.ServiceCardCreateDto;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -14,10 +14,11 @@ public class MasterCardCreateDto {
     private String firstName;
     private String lastName;
     @NotNull
+    @Valid
     private ContactDto contacts;
+    @NotNull
+    @Valid
     private AddressDto address;
     private String description;
     private List<Long> subcategories;
-    private List<ServiceCardCreateDto> serviceCards;
-
 }

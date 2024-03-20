@@ -15,7 +15,11 @@ public class MasterCardSpecificationBuilder implements SpecificationBuilder<Mast
 
     @Override
     public Specification<MasterCard> build(SearchParam param) {
-        Specification<MasterCard> spec = Specification.where(null);
+        Specification<MasterCard> spec = Specification.where(
+                (root, query, criteriaBuilder) -> criteriaBuilder.equal(
+                        root.get("isHidden"), false
+                )
+        );
         if (param.getText() != null && !param.getText().isBlank()) {
             spec = spec.and(
                     providerManager.getSpecificationProvider("name")

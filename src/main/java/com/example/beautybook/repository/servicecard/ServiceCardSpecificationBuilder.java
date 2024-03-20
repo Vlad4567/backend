@@ -15,7 +15,11 @@ public class ServiceCardSpecificationBuilder implements SpecificationBuilder<Ser
 
     @Override
     public Specification<ServiceCard> build(SearchParam param) {
-        Specification<ServiceCard> spec = Specification.where(null);
+        Specification<ServiceCard> spec = Specification.where(
+                (root, query, criteriaBuilder) -> criteriaBuilder.equal(
+                        root.join("masterCard").get("isHidden"), false
+                )
+        );
 
         if (param.getText() != null && !param.getText().isBlank()) {
             spec = spec.and(

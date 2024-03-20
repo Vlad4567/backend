@@ -50,7 +50,10 @@ public class SecurityConfig {
                                        "/city",
                                        "/getEmail",
                                        "/forgot-password/{email}",
-                                       "/city/search"
+                                       "/city/search",
+                                       "/user/updateEmail/{token}",
+                                       "/user/verificationNewMail/{token}",
+                                       "/photo/subcategory/{subcategoryId}"
                                    )
                                    .permitAll()
                                    .anyRequest()

@@ -16,4 +16,8 @@ public interface ServiceCardService {
     Page<ServiceCardSearchDto> search(SearchParam param, Pageable pageable);
 
     List<ServiceCardDto> getAllByMasterCardIdAndSubcategoryId(Long masterId, Long subcategoryId);
+
+    void deleteServiceCard(Long id);
+
+    ServiceCardDto updateServiceCard(Long id, ServiceCardCreateDto dto);
 }

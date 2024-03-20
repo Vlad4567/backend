@@ -1,11 +1,12 @@
 package com.example.beautybook.dto.address;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class AddressDto {
-    @NotBlank
+    @NotNull
     private Long cityId;
     @NotBlank
     private String street;
