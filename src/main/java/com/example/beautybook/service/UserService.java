@@ -1,21 +1,19 @@
 package com.example.beautybook.service;
 
-import com.example.beautybook.dto.user.ResetPasswordDto;
-import com.example.beautybook.dto.user.UserDto;
-import com.example.beautybook.dto.user.UserRegistrationDto;
-import com.example.beautybook.dto.user.UserUpdateDto;
+import com.example.beautybook.dto.user.request.ResetPasswordDto;
+import com.example.beautybook.dto.user.request.UpdateEmailDto;
+import com.example.beautybook.dto.user.request.UserRegistrationDto;
+import com.example.beautybook.dto.user.request.UserUpdateDto;
+import com.example.beautybook.dto.user.response.UserDto;
+import com.example.beautybook.dto.user.response.UserUpdateResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
     UserDto createUser(UserRegistrationDto dto);
 
-    UserDto update(UserUpdateDto userUpdateDto);
+    UserUpdateResponseDto update(UserUpdateDto userUpdateDto);
 
     String uploadProfilePhoto(MultipartFile file);
-
-    UserDto addFavoriteMasterCard(Long id);
-
-    UserDto deleteFavoriteMasterCard(Long id);
 
     UserDto getAuthenticationUser();
 
@@ -29,5 +27,5 @@ public interface UserService {
 
     void updateEmail(String token);
 
-    void verificationNewMail(String token);
+    void verificationNewMail(UpdateEmailDto updateEmailDto);
 }

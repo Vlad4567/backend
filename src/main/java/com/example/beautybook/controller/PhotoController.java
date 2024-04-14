@@ -13,6 +13,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,14 +50,17 @@ public class PhotoController {
             @ImageFile
             MultipartFile file,
             @Valid
-            @NotNull
+            @NotNull(message = "Сan not be empty")
             Long subcategoryId
     ) {
         return photoService.savePhoto(file, subcategoryId);
     }
 
     @GetMapping("/photo/download")
-    byte[] downloadPhoto(@Valid @NotBlank String file) {
+    byte[] downloadPhoto(
+            @Valid @NotBlank(message = "Сan not be empty")
+            String file
+    ) {
         if (file.contains(":")) {
             file = file.replace(":", "\\");
         }
@@ -68,22 +73,40 @@ public class PhotoController {
     }
 
     @DeleteMapping("/photo/delete")
-    void deletePhoto(@Valid @NotNull Long id) {
+    void deletePhoto(
+            @Valid
+            @NotNull(message = "Сan not be empty")
+            Long id
+    ) {
         photoService.deletePhoto(id);
     }
 
     @PutMapping("/photo/update/main")
-    void updateMainPhoto(@Valid @NotNull Long id) {
+    void updateMainPhoto(
+            @Valid
+            @NotNull(message = "Сan not be empty")
+            Long id
+    ) {
         photoService.updateMainPhoto(id);
     }
 
     @GetMapping("/photo/subcategory/{subcategoryId}")
-    List<PhotoDto> getPhotoByMasterCardAndSubcategory(
-            @NotBlank
+    Page<PhotoDto> getPhotoByMasterCardAndSubcategory(
+            @NotNull(message = "Сan not be empty")
             @PathVariable
             Long subcategoryId,
-            Long masterCardId
+            Long masterCardId,
+            Pageable pageable
     ) {
-        return photoService.getPhotoByMasterCardAndSubcategory(subcategoryId, masterCardId);
+        return photoService.getPhotoByMasterCardAndSubcategory(
+                pageable,
+                subcategoryId,
+                masterCardId
+        );
+    }
+
+    @GetMapping("/photo")
+    List<PhotoDto> getRandomPhotoByMaster(Long masterCardId) {
+        return photoService.getRandomPhotoByMasterCard(masterCardId);
     }
 }

@@ -34,19 +34,19 @@ public class JwtUtil {
 
     public String generateToken(String username, Secret secret) {
         return Jwts.builder()
-                   .setSubject(username)
-                   .setIssuedAt(new Date(System.currentTimeMillis()))
-                   .setExpiration(new Date(System.currentTimeMillis() + getExpiration(secret)))
-                   .signWith(getSecretKey(secret))
-                   .compact();
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + getExpiration(secret)))
+                .signWith(getSecretKey(secret))
+                .compact();
     }
 
     public boolean isValidToken(String token, Secret secret) {
         try {
             Jws<Claims> claimsJws = Jwts.parserBuilder()
-                                        .setSigningKey(getSecretKey(secret))
-                                        .build()
-                                        .parseClaimsJws(token);
+                    .setSigningKey(getSecretKey(secret))
+                    .build()
+                    .parseClaimsJws(token);
             return !claimsJws.getBody().getExpiration().before(new Date());
         } catch (JwtException | IllegalArgumentException e) {
             throw new JwtException("Expired or invalid JWT token", e);
@@ -62,10 +62,10 @@ public class JwtUtil {
             Function<Claims, T> claimsResolver,
             Secret secret) {
         final Claims claims = Jwts.parserBuilder()
-                                  .setSigningKey(getSecretKey(secret))
-                                  .build()
-                                  .parseClaimsJws(token)
-                                  .getBody();
+                .setSigningKey(getSecretKey(secret))
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
         return claimsResolver.apply(claims);
     }
 

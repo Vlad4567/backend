@@ -7,17 +7,20 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 
-@Data
+@Setter
+@Getter
 @Entity
 @NoArgsConstructor
-public class Role implements GrantedAuthority {
+public class Role extends BaseModel implements GrantedAuthority {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(
             name = "names",
             unique = true,
@@ -32,6 +35,11 @@ public class Role implements GrantedAuthority {
     @Override
     public String getAuthority() {
         return name.name();
+    }
+
+    @Override
+    public String toString() {
+        return super.toString(this);
     }
 
     public enum RoleName {

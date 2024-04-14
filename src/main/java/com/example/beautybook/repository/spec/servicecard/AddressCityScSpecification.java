@@ -3,6 +3,7 @@ package com.example.beautybook.repository.spec.servicecard;
 import com.example.beautybook.dto.search.SearchParam;
 import com.example.beautybook.model.ServiceCard;
 import com.example.beautybook.repository.user.SpecificationProvider;
+import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ public class AddressCityScSpecification implements SpecificationProvider<Service
                 root
                         .join("masterCard")
                         .join("address")
-                        .join("city")
+                        .join("city", JoinType.LEFT)
                         .get("id")
                         .in(param.getCity());
     }

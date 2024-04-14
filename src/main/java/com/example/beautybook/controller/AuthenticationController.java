@@ -1,13 +1,15 @@
 package com.example.beautybook.controller;
 
-import com.example.beautybook.dto.user.RequestRefreshDto;
-import com.example.beautybook.dto.user.ResponseRefreshDto;
-import com.example.beautybook.dto.user.UserDto;
-import com.example.beautybook.dto.user.UserLoginRequestDto;
-import com.example.beautybook.dto.user.UserLoginResponseDto;
-import com.example.beautybook.dto.user.UserRegistrationDto;
+import com.example.beautybook.dto.TelegramLoginDto;
+import com.example.beautybook.dto.user.request.RequestRefreshDto;
+import com.example.beautybook.dto.user.request.UserLoginRequestDto;
+import com.example.beautybook.dto.user.request.UserRegistrationDto;
+import com.example.beautybook.dto.user.response.ResponseRefreshDto;
+import com.example.beautybook.dto.user.response.UserDto;
+import com.example.beautybook.dto.user.response.UserLoginResponseDto;
 import com.example.beautybook.security.AuthenticationService;
 import com.example.beautybook.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -52,20 +54,28 @@ public class AuthenticationController {
     }
 
     @PostMapping("/forgot-password/{email}")
-    public String forgotPassword(@PathVariable @Email String email) {
+    public String forgotPassword(
+            @PathVariable
+            @Email(message = "Invalid email format.")
+            String email
+    ) {
         userService.forgotPassword(email);
         return "ok";
     }
 
     @GetMapping("/auth/checkEmail")
-    public boolean checkEmailExistence(@RequestParam @Email @NotBlank String email) {
+    public boolean checkEmailExistence(
+            @RequestParam
+            @Email(message = "Invalid email format.")
+            @NotBlank(message = "Сan not be empty")
+            String email) {
         return userService.existsByEmail(email);
     }
 
     @GetMapping("/auth/checkUsername")
     public boolean checkUsernameExistence(
             @RequestParam
-            @Size(min = 3, max = 10)
+            @Size(min = 3, max = 10, message = "It must contain between 3 and 10 characters.")
             String username
     ) {
         return userService.existsByUsername(username);
@@ -79,5 +89,16 @@ public class AuthenticationController {
     @DeleteMapping("/auth/refreshToken")
     public void deleteRefreshToken() {
         authenticationService.deleteRefreshToken();
+    }
+
+    @GetMapping("/auth/login/deviceToken")
+    public String getLoginDeviceToken(HttpServletRequest request) {
+        return authenticationService.getLoginDeviceToken(request);
+    }
+
+    @PostMapping("/auth/login/telegram")
+    public UserLoginResponseDto loginWithTelegram(
+            @RequestBody TelegramLoginDto dto) {
+        return authenticationService.loginWithTelegram(dto);
     }
 }

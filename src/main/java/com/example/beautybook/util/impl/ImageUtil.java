@@ -16,12 +16,11 @@ public class ImageUtil {
     private static final int ELEMENT_SIZE = 20;
 
     public static void resizeImage(
-            String inputImagePath,
+            BufferedImage image,
             String outputImagePath,
             int targetWidth,
             int targetHeight
     ) {
-        BufferedImage image = readImage(inputImagePath);
         double targetCoefficient = (double) targetWidth / targetHeight;
         double originalCoefficient = (double) image.getWidth() / image.getHeight();
         BufferedImage finalImage;
@@ -76,7 +75,7 @@ public class ImageUtil {
         writeImage(finalImage, outputImagePath);
     }
 
-    private static BufferedImage readImage(String inputImagePath) {
+    public static BufferedImage readImage(String inputImagePath) {
         try {
             return ImageIO.read(new File(inputImagePath));
         } catch (IOException e) {

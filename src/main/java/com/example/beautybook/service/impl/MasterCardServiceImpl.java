@@ -1,6 +1,5 @@
 package com.example.beautybook.service.impl;
 
-import com.example.beautybook.dto.Statistics;
 import com.example.beautybook.dto.category.SubcategoryResponseDto;
 import com.example.beautybook.dto.mastercard.MasterCardCreateDto;
 import com.example.beautybook.dto.mastercard.MasterCardCreateResponseDto;
@@ -18,12 +17,13 @@ import com.example.beautybook.model.Subcategory;
 import com.example.beautybook.model.User;
 import com.example.beautybook.repository.categoty.SubcategoryRepository;
 import com.example.beautybook.repository.mastercard.MasterCardRepository;
+import com.example.beautybook.repository.mastercard.ReviewRepository;
 import com.example.beautybook.repository.user.SpecificationBuilder;
 import com.example.beautybook.repository.user.UserRepository;
 import com.example.beautybook.service.MasterCardService;
-import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,11 +34,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class MasterCardServiceImpl implements MasterCardService {
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
     private final MasterCardRepository masterCardRepository;
     private final SubcategoryRepository subcategoryRepository;
     private final MasterCardMapper masterCardMapper;
@@ -56,6 +58,7 @@ public class MasterCardServiceImpl implements MasterCardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<MasterCardResponseDto> getTop20MasterCard(int pageNumber, int pageSize) {
         Pageable pageable = PageRequest.of(
                 pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "rating"));
@@ -71,12 +74,14 @@ public class MasterCardServiceImpl implements MasterCardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MasterCardUpdateResponseDto getUserMasterCard() {
         MasterCard masterCard = getAuthenticatedUserMasterCard();
         return masterCardMapper.toUpdateResponseDto(masterCard);
     }
 
     @Override
+    @Transactional
     public MasterCardDto updateMasterCard(MasterCardUpdateDto masterCardUpdateDto) {
         MasterCard masterCard = getAuthenticatedUserMasterCard();
         masterCardMapper.updateModelForDto(masterCard, masterCardUpdateDto);
@@ -84,19 +89,20 @@ public class MasterCardServiceImpl implements MasterCardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MasterCardDto getMasterCardById(Long id) {
-        MasterCard masterCard = masterCardRepository.findMasterCardByIdAndIsHiddenFalse(id)
+        MasterCard masterCard = masterCardRepository.findMasterCardByIdAndIsHiddenIsFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Not found Master card by id: " + id)
 
                 );
         MasterCardDto dto = masterCardMapper.toDto(masterCard);
-        dto.setStatistics(new Statistics(masterCardRepository.getCountsByGrade(id)));
-        dto.setGallery(getRandomPhotoDto(dto.getGallery(), 4));
+        dto.setStatistics(reviewRepository.getCountsByGrade(id));
         return dto;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<MasterCardResponseDto> searchMasterCard(SearchParam param, Pageable pageable) {
         Page<MasterCard> masterCards = masterCardRepository.findAll(
                 masterCardSpecificationBuilder.build(param), pageable);
@@ -109,8 +115,8 @@ public class MasterCardServiceImpl implements MasterCardService {
         );
     }
 
-    @Transactional
     @Override
+    @Transactional
     public List<SubcategoryResponseDto> addSubcategory(Long id) {
         Subcategory subcategory = subcategoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -125,6 +131,23 @@ public class MasterCardServiceImpl implements MasterCardService {
     }
 
     @Override
+    @Transactional
+    public List<SubcategoryResponseDto> deleteSubcategoryFromList(Long id) {
+        MasterCard masterCard = getAuthenticatedUserMasterCard();
+        Subcategory sub = masterCard.getSubcategories().stream()
+                .filter(subcategory -> subcategory.getId().equals(id))
+                .findFirst().orElseThrow(
+                        () -> new EntityNotFoundException(
+                                "Not found subcategory by " + id + "from list")
+                );
+        masterCard.getSubcategories().remove(sub);
+        return masterCardRepository.save(masterCard).getSubcategories().stream()
+                .map(subcategoryMapper::toResponseDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional
     public void deleteMasterCard() {
         MasterCard masterCard = getAuthenticatedUserMasterCard();
         masterCard.setDeleted(true);
@@ -133,6 +156,7 @@ public class MasterCardServiceImpl implements MasterCardService {
     }
 
     @Override
+    @Transactional
     public void hideMasterCard() {
         MasterCard masterCard = getAuthenticatedUserMasterCard();
         masterCard.setHidden(true);
@@ -140,6 +164,7 @@ public class MasterCardServiceImpl implements MasterCardService {
     }
 
     @Override
+    @Transactional
     public void unhideMasterCard() {
         MasterCard masterCard = getAuthenticatedUserMasterCard();
         masterCard.setHidden(false);
@@ -148,17 +173,17 @@ public class MasterCardServiceImpl implements MasterCardService {
 
     private User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return userRepository.findByEmail(authentication.getName())
+        return userRepository.findByUuid(authentication.getName())
                 .orElseThrow(() -> new EntityNotFoundException("Not fount user by email: "
                         + authentication.getName()));
     }
 
     private MasterCard getAuthenticatedUserMasterCard() {
-        return masterCardRepository.findByUserEmail(
-                SecurityContextHolder.getContext().getAuthentication().getName())
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Not found master card by Authentication user"
-                ));
+        Optional<MasterCard> byUserUuid = masterCardRepository.findByUserUuid(
+                SecurityContextHolder.getContext().getAuthentication().getName());
+        return byUserUuid.orElseThrow(() -> new EntityNotFoundException(
+                "Not found master card by Authentication user"
+        ));
     }
 
     private List<PhotoDto> getRandomPhotoDto(List<PhotoDto> photos, int size) {
@@ -169,6 +194,6 @@ public class MasterCardServiceImpl implements MasterCardService {
         for (int i = 0; i < size; i++) {
             randomList.add(photos.get(random.nextInt(0, photos.size() - 1)));
         }
-        return randomList;
+        return randomList;//TODO
     }
 }

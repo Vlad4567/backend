@@ -33,7 +33,7 @@ public class ServiceCardController {
     public List<ServiceCardDto> getServiceCardsByMasterIdAndSubcategoryId(
             @PathVariable
             Long masterId,
-            @NotNull
+            @NotNull(message = "Сan not be empty")
             Long subcategoryId) {
         return serviceCardService.getAllByMasterCardIdAndSubcategoryId(masterId, subcategoryId);
     }
@@ -61,11 +61,11 @@ public class ServiceCardController {
 
     @PutMapping("/serviceCard/{id}")
     ServiceCardDto updateServiceCard(
-            @NotNull
+            @NotNull(message = "Сan not be empty")
             @PathVariable
             Long id,
             @Valid
-            @NotNull
+            @NotNull(message = "Сan not be empty")
             @RequestBody
             ServiceCardCreateDto dto
     ) {

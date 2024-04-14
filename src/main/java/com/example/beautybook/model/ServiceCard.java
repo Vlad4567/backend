@@ -1,5 +1,6 @@
 package com.example.beautybook.model;
 
+import com.example.beautybook.annotetion.OnlyIdToString;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,19 +8,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.SQLRestriction;
 
-@Data
+@Setter
+@Getter
 @Entity
-@EqualsAndHashCode(exclude = "masterCard")
 @SQLRestriction("is_deleted=false")
 @Table(name = "service_card")
-public class ServiceCard {
+public class ServiceCard extends BaseModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,15 +31,19 @@ public class ServiceCard {
 
     private int duration;
 
+    @OnlyIdToString
     @ManyToOne
     @JoinColumn(name = "subcategory_id", referencedColumnName = "id")
     private Subcategory subcategory;
 
+    @OnlyIdToString
     @ManyToOne
     @JoinColumn(name = "master_card_id", referencedColumnName = "id")
+    @ToString.Exclude
     private MasterCard masterCard;
 
-    @OneToOne
+    @OnlyIdToString
+    @ManyToOne
     @JoinColumn(name = "photo_id")
     private Photo photo;
 
@@ -47,5 +52,10 @@ public class ServiceCard {
             nullable = false,
             columnDefinition = "BOOLEAN DEFAULT false"
     )
-    private Boolean isDeleted;
+    private boolean isDeleted;
+
+    @Override
+    public String toString() {
+        return super.toString(this);
+    }
 }

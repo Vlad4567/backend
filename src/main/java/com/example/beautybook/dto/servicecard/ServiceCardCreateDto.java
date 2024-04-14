@@ -7,12 +7,12 @@ import lombok.Data;
 
 @Data
 public class ServiceCardCreateDto {
-    @NotBlank
+    @NotBlank(message = "Сan not be empty")
     private String name;
-    @NotNull
+    @NotNull(message = "Сan not be empty")
     private BigDecimal price;
     private int duration;
-    @NotNull
+    @NotNull(message = "Сan not be empty")
     private Long subcategoryId;
     private Long photoId;
 }

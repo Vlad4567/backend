@@ -19,7 +19,11 @@ public class CityController {
     private final CityService cityService;
 
     @GetMapping("/city/search")
-    public Page<City> searchCity(@NotBlank String text, Pageable pageable) {
+    public Page<City> searchCity(
+            @NotBlank(message = "Сan not be empty")
+            String text,
+            Pageable pageable
+    ) {
         return cityService.searchCity(text, pageable);
     }
 }

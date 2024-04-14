@@ -27,6 +27,8 @@ public interface MasterCardService {
 
     List<SubcategoryResponseDto> addSubcategory(Long id);
 
+    List<SubcategoryResponseDto> deleteSubcategoryFromList(Long id);
+
     void deleteMasterCard();
 
     void hideMasterCard();

@@ -6,8 +6,8 @@ import lombok.Data;
 
 @Data
 public class SubcategoryDto {
-    @NotBlank
+    @NotBlank(message = "Сan not be empty")
     private String name;
-    @NotNull
+    @NotNull(message = "Сan not be empty")
     private Long categoryId;
 }

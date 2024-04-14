@@ -6,11 +6,11 @@ import lombok.Data;
 
 @Data
 public class AddressDto {
-    @NotNull
+    @NotNull(message = "Сan not be empty")
     private Long cityId;
-    @NotBlank
+    @NotBlank(message = "Сan not be empty")
     private String street;
-    @NotBlank
+    @NotBlank(message = "Сan not be empty")
     private String houseNumber;
     private String description;
 }
