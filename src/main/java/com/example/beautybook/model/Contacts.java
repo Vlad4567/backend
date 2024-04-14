@@ -4,11 +4,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Data
-public class Contacts {
+@Setter
+@Getter
+public class Contacts extends BaseModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -16,4 +18,9 @@ public class Contacts {
     private String facebook;
     private String telegram;
     private String phone;
+
+    @Override
+    public String toString() {
+        return super.toString(this);
+    }
 }

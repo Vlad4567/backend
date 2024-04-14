@@ -29,6 +29,7 @@ public interface ServiceCardMapper {
     ServiceCard toModel(ServiceCardCreateDto serviceCardCreateDto);
 
     @Mapping(target = "subcategory", source = "subcategory.name")
+    @Mapping(target = "photo", source = "photo.photoUrl")
     ServiceCardSearchDto toSearchDto(ServiceCard serviceCard);
 
     void updateServiceCardForDto(@MappingTarget ServiceCard serviceCard, ServiceCardCreateDto dto);
@@ -38,6 +39,8 @@ public interface ServiceCardMapper {
             @MappingTarget ServiceCard serviceCard,
             ServiceCardCreateDto dto) {
         serviceCard.setSubcategory(new Subcategory(dto.getSubcategoryId()));
-        serviceCard.setPhoto(new Photo(dto.getPhotoId()));
+        if (dto.getPhotoId() != null) {
+            serviceCard.setPhoto(new Photo(dto.getPhotoId()));
+        }
     }
 }

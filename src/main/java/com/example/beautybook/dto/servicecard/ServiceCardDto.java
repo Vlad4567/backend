@@ -1,5 +1,6 @@
 package com.example.beautybook.dto.servicecard;
 
+import com.example.beautybook.dto.photo.PhotoDto;
 import java.math.BigDecimal;
 import lombok.Data;
 
@@ -11,4 +12,5 @@ public class ServiceCardDto {
     private int duration;
     private Long subcategoryId;
     private Long masterCardId;
+    private PhotoDto photo;
 }

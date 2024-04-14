@@ -1,8 +1,11 @@
 package com.example.beautybook.model;
 
+import com.example.beautybook.annotetion.IgnoreToSting;
+import com.example.beautybook.annotetion.OnlyIdToString;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,40 +19,34 @@ import jakarta.validation.constraints.DecimalMin;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.SQLRestriction;
 
-@Data
+@Getter
+@Setter
 @Entity
 @NoArgsConstructor
-@EqualsAndHashCode(exclude = {"gallery", "reviews", "mainPhoto"})
 @SQLRestriction("is_deleted=false")
-public class MasterCard {
+public class MasterCard extends BaseModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OnlyIdToString
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
+    @OnlyIdToString
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id")
+    @ToString.Exclude
     private Address address;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "location_id")
-    private Location location;
-
-    @OneToOne(
-            cascade = CascadeType.ALL,
-            mappedBy = "masterCard",
-            orphanRemoval = true
-    )
-    private WorkPeriod workPeriod;
-
+    @IgnoreToSting
     @OneToMany(
             cascade = CascadeType.ALL,
             mappedBy = "masterCard",
@@ -57,15 +54,10 @@ public class MasterCard {
     )
     private Set<Photo> gallery = new HashSet<>();
 
-    @OneToOne
+    @OnlyIdToString
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "main_photo_id")
     private Photo mainPhoto;
-    @OneToMany(
-            cascade = CascadeType.ALL,
-            mappedBy = "masterCard",
-            orphanRemoval = true
-    )
-    private Set<Review> reviews = new HashSet<>();
 
     @Column(name = "rating")
     @DecimalMin(value = "0.0")
@@ -75,6 +67,7 @@ public class MasterCard {
     @Column(name = "description")
     private String description;
 
+    @IgnoreToSting
     @ManyToMany
     @JoinTable(
             name = "mastercard_subcategory",
@@ -83,6 +76,7 @@ public class MasterCard {
     )
     private Set<Subcategory> subcategories;
 
+    @IgnoreToSting
     @OneToMany(
             mappedBy = "masterCard",
             cascade = CascadeType.ALL,
@@ -92,9 +86,11 @@ public class MasterCard {
     private String firstName;
     private String lastName;
 
+    @OnlyIdToString
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "contacts_id")
     private Contacts contacts;
+
     @Column(
             name = "is_hidden",
             nullable = false,
@@ -111,5 +107,10 @@ public class MasterCard {
 
     public MasterCard(Long id) {
         this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString(this);
     }
 }

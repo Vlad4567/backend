@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class ReviewUpdateDto {
-    @NotNull
+    @NotNull(message = "Сan not be empty")
     private Integer grade;
     private String comment;
 }

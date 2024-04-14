@@ -1,47 +1,61 @@
 package com.example.beautybook.service.impl;
 
-import com.example.beautybook.dto.DataForMailDto;
-import com.example.beautybook.dto.user.ResetPasswordDto;
-import com.example.beautybook.dto.user.UserDto;
-import com.example.beautybook.dto.user.UserRegistrationDto;
-import com.example.beautybook.dto.user.UserUpdateDto;
+import com.example.beautybook.dto.user.request.ResetPasswordDto;
+import com.example.beautybook.dto.user.request.UpdateEmailDto;
+import com.example.beautybook.dto.user.request.UserRegistrationDto;
+import com.example.beautybook.dto.user.request.UserUpdateDto;
+import com.example.beautybook.dto.user.response.UserDto;
+import com.example.beautybook.dto.user.response.UserUpdateResponseDto;
 import com.example.beautybook.exceptions.AccessDeniedException;
 import com.example.beautybook.exceptions.DataConflictException;
 import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.exceptions.RegistrationException;
 import com.example.beautybook.exceptions.VirusDetectionException;
-import com.example.beautybook.exceptions.photo.InvalidOriginFileNameException;
 import com.example.beautybook.mapper.UserMapper;
-import com.example.beautybook.model.MasterCard;
+import com.example.beautybook.message.MessageProvider;
 import com.example.beautybook.model.Role;
 import com.example.beautybook.model.User;
 import com.example.beautybook.repository.mastercard.MasterCardRepository;
 import com.example.beautybook.repository.user.UserRepository;
 import com.example.beautybook.security.JwtUtil;
-import com.example.beautybook.service.EmailService;
 import com.example.beautybook.service.UserService;
+import com.example.beautybook.util.EmailSenderUtil;
 import com.example.beautybook.util.PasswordGeneratorUtil;
 import com.example.beautybook.util.UploadFileUtil;
 import com.example.beautybook.util.VirusScannerUtil;
 import com.example.beautybook.util.impl.ImageUtil;
+import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import xyz.capybara.clamav.commands.scan.result.ScanResult;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+    private static final String API = "/auth/verificationMail/";
+    private static final String API_UPDATE_EMAIL = "/user/updateEmail/";
     private static final String IMAGE_FORMAT = ".jpg";
-    private static final String FILE_NAME = "userProfilePhoto\\userProfilePhoto";
+    private static final String FILE_NAME = "userProfilePhoto";
     private static final int WIDTH_PROFILE_PHOTO = 162;
     private static final int HEIGHT_PROFILE_PHOTO = 162;
+    private static final int WIDTH_PROFILE_PHOTO_REVIEW = 44;
+    private static final int HEIGHT_PROFILE_PHOTO_REVIEW = 44;
+    private static final String DELIMITER_EMAIL = ":";
+    private static final int INDEX_EMAIL = 0;
+    private static final int INDEX_NEW_EMAIL = 1;
+    @Value("${path.host}")
+    private String host;
+    @Value("${server.servlet.context-path}")
+    private String contextPath;
     private final UserRepository userRepository;
     private final MasterCardRepository masterCardRepository;
     private final JwtUtil jwtUtil;
@@ -49,12 +63,13 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UploadFileUtil uploadFileUtil;
     private final VirusScannerUtil virusScannerUtil;
-    private final EmailService emailService;
     private final PasswordGeneratorUtil passwordGenerator;
+    private final EmailSenderUtil emailSenderUtil;
     @Value("${uploud.dir}")
     private String uploadDir;
 
     @Override
+    @Transactional
     public UserDto createUser(UserRegistrationDto userRegistrationDto) {
         User newUser = userMapper.toModel(userRegistrationDto);
         checkExistingCredentials(newUser.getEmail(), newUser.getUserName());
@@ -62,40 +77,34 @@ public class UserServiceImpl implements UserService {
         Set<Role> roles = new HashSet<>();
         roles.add(new Role(1L));
         newUser.setRoles(roles);
+        newUser.setUuid(UUID.randomUUID().toString());
         User user = userRepository.save(newUser);
-        emailService.sendMail(new DataForMailDto(
-                user.getUserName(),
-                user.getEmail(),
-                "verification"));
+        user.setUuid(user.getUuid() + user.getId());
+        userRepository.save(user);
+
+        String link = host + contextPath + API
+                + jwtUtil.generateToken(user.getEmail(), JwtUtil.Secret.MAIL);
+        String text = MessageProvider.getMessage(
+                "verification.email", user.getUserName(), link);
+        emailSenderUtil.sendEmail(user.getEmail(), "Verification email", text);
         return userMapper.toDto(user);
     }
 
     @Override
-    public UserDto update(UserUpdateDto userUpdateDto) {
+    @Transactional
+    public UserUpdateResponseDto update(UserUpdateDto userUpdateDto) {
         User user = getAuthenticatedUser();
-        if (!userUpdateDto.getUsername().equals(user.getUserName())) {
-            if (existsByUsername(userUpdateDto.getUsername())) {
-                throw new DataConflictException(
-                        "Username '" + userUpdateDto.getUsername() + "' already exists.");
-            }
-            user.setUsername(userUpdateDto.getUsername());
-        }
-        if (!userUpdateDto.getEmail().equals(user.getEmail())) {
-            if (existsByEmail(userUpdateDto.getEmail())) {
-                throw new DataConflictException(
-                        "Email '" + userUpdateDto.getEmail() + "' already exists.");
-            }
-            emailService.sendMail(new DataForMailDto(
-                    user.getUserName(),
-                    user.getEmail(),
-                    userUpdateDto.getEmail(),
-                    "updateEmail")
-            );
-        }
-        return userMapper.toDto(userRepository.save(user));
+        updateUsername(user, userUpdateDto.getUsername());
+
+        UserUpdateResponseDto responseDto =
+                userMapper.toUpdateResponseDto(userRepository.save(user));
+        responseDto.setMaster(masterCardRepository.existsByUserEmail(responseDto.getEmail()));
+        checkNewEmail(responseDto, userUpdateDto.getEmail());
+        return responseDto;
     }
 
     @Override
+    @Transactional
     public String uploadProfilePhoto(MultipartFile file) {
         User user = getAuthenticatedUser();
         String fileName = FILE_NAME + user.getId() + IMAGE_FORMAT;
@@ -104,36 +113,15 @@ public class UserServiceImpl implements UserService {
         if (virusScannerUtil.scanFile(path) instanceof ScanResult.VirusFound) {
             throw new VirusDetectionException("Virus detected in the uploaded photo.");
         }
-        ImageUtil.resizeImage(path, path, WIDTH_PROFILE_PHOTO, HEIGHT_PROFILE_PHOTO);
-        fileName = fileName.replace("\\", ":");
+
+        savePhotosWithResizedDimensions(path, user.getId());
         user.setProfilePhoto(fileName);
         userRepository.save(user);
         return fileName;
     }
 
     @Override
-    public UserDto addFavoriteMasterCard(Long id) {
-        User user = getAuthenticatedUser();
-        MasterCard masterCard = masterCardRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Not found master card by id: " + id)
-                );
-        user.getFavorite().add(masterCard);
-        return userMapper.toDto(userRepository.save(user));
-    }
-
-    @Override
-    public UserDto deleteFavoriteMasterCard(Long id) {
-        User user = getAuthenticatedUser();
-        MasterCard masterCard = masterCardRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Not found master card by id: " + id)
-                );
-        user.getFavorite().remove(masterCard);
-        return userMapper.toDto(userRepository.save(user));
-    }
-
-    @Override
+    @Transactional
     public UserDto getAuthenticationUser() {
         UserDto dto = userMapper.toDto(getAuthenticatedUser());
         dto.setMaster(masterCardRepository.existsByUserEmail(dto.getEmail()));
@@ -141,6 +129,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDto resetPassword(ResetPasswordDto resetPasswordDto) {
         User user = getAuthenticatedUser();
         if (!passwordEncoder.matches(resetPasswordDto.getCurrentPassword(), user.getPassword())) {
@@ -151,20 +140,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void forgotPassword(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findUserByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Not found user by email: " + email)
                 );
-        user.setPassword(passwordGenerator.generateRandomPassword());
-
-        emailService.sendMail(new DataForMailDto(
-                user.getUserName(),
-                user.getEmail(),
-                user.getPassword(),
-                "passwordReset")
-        );
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        String password = passwordGenerator.generateRandomPassword();
+        String text =
+                MessageProvider.getMessage("password.reset", user.getUserName(), password);
+        emailSenderUtil.sendEmail(user.getEmail(), "Password Reset", text);
+        user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
     }
 
@@ -179,48 +165,41 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateEmail(String token) {
         if (jwtUtil.isValidToken(token, JwtUtil.Secret.MAIL)) {
             String emails = jwtUtil.getUsername(token, JwtUtil.Secret.MAIL);
-            String newEmail = emails.split(":")[1];
-            emailService.sendMail(new DataForMailDto(
-                    null,
-                    newEmail,
-                    emails,
-                    "verificationNewEmail")
-            );
-        }
-    }
-
-    @Override
-    public void verificationNewMail(String token) {
-        if (jwtUtil.isValidToken(token, JwtUtil.Secret.MAIL)) {
-            String emails = jwtUtil.getUsername(token, JwtUtil.Secret.MAIL);
-            String email = emails.split(":")[0];
-            String newEmail = emails.split(":")[1];
-            User user = userRepository.findByEmail(email).orElseThrow(
+            String email = emails.split(DELIMITER_EMAIL)[INDEX_EMAIL];
+            String newEmail = emails.split(DELIMITER_EMAIL)[INDEX_NEW_EMAIL];
+            User user = userRepository.findByUuid(email).orElseThrow(
                     () -> new EntityNotFoundException("Not found user by email " + email));
             user.setEmail(newEmail);
             userRepository.save(user);
         }
     }
 
-    private User getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new EntityNotFoundException("Not fount user by email: "
-                        + authentication.getName()));
+    @Override
+    @Transactional(readOnly = true)
+    public void verificationNewMail(UpdateEmailDto updateEmailDto) {
+        User user = getAuthenticatedUser();
+        if (!passwordEncoder.matches(updateEmailDto.getPassword(), user.getPassword())) {
+            throw new AccessDeniedException("Incorrect password");
+        }
+        String newEmail = updateEmailDto.getNewEmail();
+        String emails = user.getEmail() + DELIMITER_EMAIL + newEmail;
+
+        String link = host + contextPath + API_UPDATE_EMAIL
+                + jwtUtil.generateToken(emails, JwtUtil.Secret.MAIL);
+        String text = MessageProvider.getMessage(
+                "verification.email", user.getUserName(), link);
+        emailSenderUtil.sendEmail(newEmail, "Verification email", text);
     }
 
-    private String getFileExtension(MultipartFile file) {
-        if (file.getOriginalFilename() == null || file.getOriginalFilename().isBlank()) {
-            throw new InvalidOriginFileNameException("Origin file name is blank.");
-        }
-        String[] fileNameParts = file.getOriginalFilename().split("\\.");
-        if (fileNameParts.length < 2) {
-            throw new InvalidOriginFileNameException("Invalid origin file name format.");
-        }
-        return fileNameParts[fileNameParts.length - 1];
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return userRepository.findByUuid(authentication.getName())
+                .orElseThrow(() -> new EntityNotFoundException("Not fount user by email: "
+                        + authentication.getName()));
     }
 
     private void checkExistingCredentials(String email, String username) {
@@ -236,5 +215,38 @@ public class UserServiceImpl implements UserService {
             throw new RegistrationException(
                     "username:Username already exists " + username);
         }
+    }
+
+    private void updateUsername(User user, String username) {
+        if (!username.equals(user.getUserName())) {
+            if (existsByUsername(username)) {
+                throw new DataConflictException(
+                        "Username '" + username + "' already exists.");
+            }
+            user.setUsername(username);
+        }
+    }
+
+    private void checkNewEmail(UserUpdateResponseDto dto, String newEmail) {
+        if (!newEmail.equals(dto.getEmail())) {
+            if (existsByEmail(newEmail)) {
+                throw new DataConflictException(
+                        "Email '" + newEmail + "' already exists.");
+            }
+            dto.setNewEmail(newEmail);
+        }
+    }
+
+    private void savePhotosWithResizedDimensions(String path, Long userId) {
+        BufferedImage image = ImageUtil.readImage(path);
+        String fileNamePhotoReview = FILE_NAME + userId + "R" + IMAGE_FORMAT;
+        String pathPhotoReview = uploadDir + fileNamePhotoReview;
+        ImageUtil.resizeImage(image, path, WIDTH_PROFILE_PHOTO, HEIGHT_PROFILE_PHOTO);
+        ImageUtil.resizeImage(
+                image,
+                pathPhotoReview,
+                WIDTH_PROFILE_PHOTO_REVIEW,
+                HEIGHT_PROFILE_PHOTO_REVIEW
+        );
     }
 }

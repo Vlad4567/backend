@@ -1,5 +1,7 @@
 package com.example.beautybook.model;
 
+import com.example.beautybook.annotetion.OnlyIdToString;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,32 +11,47 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-@Data
+@Setter
+@Getter
 @Entity
-@EqualsAndHashCode(exclude = {"favorite"})
 @Table(name = "users")
-public class User implements UserDetails {
+public class User extends BaseModel implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(
+            name = "uuid",
+            unique = true,
+            nullable = false
+    )
+    private String uuid;
+
+    @OnlyIdToString
+    @OneToOne(cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    private TelegramAccount telegramAccount;
+
     @Email
     @Column(
             name = "emails",
-            unique = true,
-            nullable = false)
+            unique = true)
     private String email;
+
     @Column(name = "passwords")
     private String password;
+
     @Column(
             name = "username",
             nullable = false,
@@ -43,13 +60,8 @@ public class User implements UserDetails {
     private String username;
     private String profilePhoto;
     private String refreshToken;
-    @ManyToMany
-    @JoinTable(
-            name = "users_favorites",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "master_card_id")
-    )
-    private Set<MasterCard> favorite = new HashSet<>();
+
+    @OnlyIdToString
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
@@ -74,7 +86,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return uuid;
     }
 
     @Override
@@ -95,5 +107,10 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString(this);
     }
 }

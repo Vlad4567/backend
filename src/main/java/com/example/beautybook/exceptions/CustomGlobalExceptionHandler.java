@@ -44,73 +44,46 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return new ResponseEntity<>(body, headers, status);
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Object> handleConstraintViolationException(
-            ConstraintViolationException ex) {
+    @ExceptionHandler({
+            ConstraintViolationException.class,
+            UnverifiedUserException.class,
+            FileUploadException.class,
+            VirusDetectionException.class,
+            EmptyPhotoException.class,
+            GalleryLimitExceededException.class,
+            InvalidOriginFileNameException.class,
+            SQLIntegrityConstraintViolationException.class,
+            TelegramException.class
+    })
+    public ResponseEntity<Object> handleBadRequestExceptions(
+            Exception ex) {
         return getResponse(ex, 400);
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex) {
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<Object> handleAuthenticationExceptions(Exception ex) {
+        return getResponse(ex, 401);
+    }
+
+    @ExceptionHandler({
+            LoginException.class,
+            LoginDeviceLimitExceededException.class,
+    })
+    public ResponseEntity<Object> handleLoginExceptions(Exception ex) {
+        return getResponse(ex, 403);
+    }
+
+    @ExceptionHandler({
+            EntityNotFoundException.class,
+            AccessDeniedException.class
+    })
+    public ResponseEntity<Object> handleResourceAccessExceptions(Exception ex) {
         return getResponse(ex, 404);
     }
 
     @ExceptionHandler(RegistrationException.class)
     public ResponseEntity<Object> handleRegistrationException(RegistrationException ex) {
         return getResponse(ex, 409);
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex) {
-        return getResponse(ex, 404);
-    }
-
-    @ExceptionHandler(UnverifiedUserException.class)
-    public ResponseEntity<Object> handleUnverifiedUserException(UnverifiedUserException ex) {
-        return getResponse(ex, 400);
-    }
-
-    @ExceptionHandler(FileUploadException.class)
-    public ResponseEntity<Object> handleFileUploadException(FileUploadException ex) {
-        return getResponse(ex, 400);
-    }
-
-    @ExceptionHandler(VirusDetectionException.class)
-    public ResponseEntity<Object> handleVirusDetectionException(VirusDetectionException ex) {
-        return getResponse(ex, 400);
-    }
-
-    @ExceptionHandler(EmptyPhotoException.class)
-    public ResponseEntity<Object> handleEmptyPhotoException(EmptyPhotoException ex) {
-        return getResponse(ex, 400);
-    }
-
-    @ExceptionHandler(GalleryLimitExceededException.class)
-    public ResponseEntity<Object> handleGalleryLimitExceededException(
-            GalleryLimitExceededException ex) {
-        return getResponse(ex, 400);
-    }
-
-    @ExceptionHandler(InvalidOriginFileNameException.class)
-    public ResponseEntity<Object> handleInvalidOriginFileNameException(
-            InvalidOriginFileNameException ex) {
-        return getResponse(ex, 400);
-    }
-
-    @ExceptionHandler(ExpiredJwtException.class)
-    public ResponseEntity<Object> handleException(ExpiredJwtException ex) {
-        return getResponse(ex, 401);
-    }
-
-    @ExceptionHandler(SQLIntegrityConstraintViolationException.class)
-    public ResponseEntity<Object> handleInvocationTargetException(
-            SQLIntegrityConstraintViolationException ex) {
-        return getResponse(ex, 401);
-    }
-
-    @ExceptionHandler(LoginException.class)
-    public ResponseEntity<Object> handleLoginException(LoginException ex) {
-        return getResponse(ex, 401);
     }
 
     private String[] getErrorMessage(ObjectError e) {

@@ -43,7 +43,7 @@ public class SecurityConfig {
                                        "/masterSortByRating",
                                        "/master/**",
                                        "/mastercart/{id}/review",
-                                       "/master/{id}/servicecard",
+                                       "/master/{masterId}/servicecard",
                                        "/categories",
                                        "/auth/verificationMail/{token}",
                                        "/servicecard/search",
@@ -53,7 +53,10 @@ public class SecurityConfig {
                                        "/city/search",
                                        "/user/updateEmail/{token}",
                                        "/user/verificationNewMail/{token}",
-                                       "/photo/subcategory/{subcategoryId}"
+                                       "/photo/subcategory/{subcategoryId}",
+                                       "/contactUs",
+                                       "/photo",
+                                       "/photo/download"
                                    )
                                    .permitAll()
                                    .anyRequest()

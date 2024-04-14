@@ -79,8 +79,19 @@ public class MasterCardController {
     }
 
     @PostMapping("/master/subcategory")
-    List<SubcategoryResponseDto> addSubcategory(@NotNull Long id) {
+    List<SubcategoryResponseDto> addSubcategory(
+            @NotNull(message = "Сan not be empty")
+            Long id
+    ) {
         return masterCardService.addSubcategory(id);
+    }
+
+    @DeleteMapping("/master/subcategory")
+    List<SubcategoryResponseDto> deleteSubcategoryFromList(
+            @NotNull(message = "Сan not be empty")
+            Long id
+    ) {
+        return masterCardService.deleteSubcategoryFromList(id);
     }
 
     @DeleteMapping("/master")

@@ -6,26 +6,27 @@ import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.mapper.CategoryMapper;
 import com.example.beautybook.model.Category;
 import com.example.beautybook.repository.categoty.CategoryRepository;
-import com.example.beautybook.repository.categoty.SubcategoryRepository;
 import com.example.beautybook.service.CategoryService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
-    private final SubcategoryRepository subcategoryRepository;
 
     @Override
+    @Transactional
     public CategoryDto createCategory(CategoryDto categoryDto) {
         Category category = categoryMapper.toModel(categoryDto);
         return categoryMapper.toDto(categoryRepository.save(category));
     }
 
     @Override
+    @Transactional
     public CategoryDto update(Long id, CategoryDto categoryDto) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Not found category by id: " + id));
@@ -34,6 +35,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CategoryResponseDto> getAllCategory() {
         List<Category> categories = categoryRepository.findAll();
         return categories.stream()

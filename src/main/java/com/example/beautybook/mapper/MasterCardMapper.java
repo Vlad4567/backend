@@ -32,6 +32,7 @@ public interface MasterCardMapper {
     @Mapping(target = "subcategories", ignore = true)
     MasterCard toModel(MasterCardCreateDto masterCardCreateDto);
 
+    @Mapping(target = "mainPhoto", source = "mainPhoto.photoUrl")
     MasterCardDto toDto(MasterCard masterCard);
 
     MasterCardUpdateResponseDto toUpdateResponseDto(MasterCard masterCard);
@@ -40,7 +41,7 @@ public interface MasterCardMapper {
 
     MasterCardPreviewDto toPreviewDto(MasterCard masterCard);
 
-    @Mapping(target = "subcategories", ignore = true)
+    @Mapping(target = "mainPhoto", source = "mainPhoto.photoUrl")
     MasterCardResponseDto toResponseDto(MasterCard masterCard);
 
     void updateModelForDto(@MappingTarget MasterCard masterCard, MasterCardUpdateDto dto);

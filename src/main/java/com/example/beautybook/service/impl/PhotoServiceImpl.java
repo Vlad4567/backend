@@ -7,23 +7,31 @@ import com.example.beautybook.exceptions.photo.GalleryLimitExceededException;
 import com.example.beautybook.mapper.PhotoMapper;
 import com.example.beautybook.model.MasterCard;
 import com.example.beautybook.model.Photo;
+import com.example.beautybook.model.ServiceCard;
 import com.example.beautybook.model.Subcategory;
 import com.example.beautybook.repository.mastercard.MasterCardRepository;
 import com.example.beautybook.repository.photo.PhotoRepository;
+import com.example.beautybook.repository.servicecard.ServiceCardRepository;
 import com.example.beautybook.service.PhotoService;
 import com.example.beautybook.util.UploadFileUtil;
 import com.example.beautybook.util.VirusScannerUtil;
 import com.example.beautybook.util.impl.ImageUtil;
-import jakarta.transaction.Transactional;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import xyz.capybara.clamav.commands.scan.result.ScanResult;
 
@@ -33,6 +41,7 @@ public class PhotoServiceImpl implements PhotoService {
     private static final String IMAGE_FORMAT = ".jpg";
     private static final String IMAGE_NAME = "masterCardPhoto";
     private final VirusScannerUtil virusScanner;
+    private final ServiceCardRepository serviceCardRepository;
     private final MasterCardRepository masterCardRepository;
     private final PhotoRepository photoRepository;
     private final PhotoMapper photoMapper;
@@ -46,7 +55,7 @@ public class PhotoServiceImpl implements PhotoService {
     @Override
     public PhotoDto savePhoto(MultipartFile file, Long subcategoryId) {
         MasterCard masterCard = getMasterCardAuthenticatedUser();
-        if (checkSubcategoryExistsById(masterCard, subcategoryId) == null) {
+        if (checkSubcategoryExistsById(masterCard, subcategoryId).isEmpty()) {
             throw new EntityNotFoundException("Not found subcategory id in master card");
         }
         if (masterCard.getGallery().size() >= limitPhoto) {
@@ -55,29 +64,45 @@ public class PhotoServiceImpl implements PhotoService {
                             + "You can only upload up to " + limitPhoto + " photos.");
         }
         Photo newPhoto = photoRepository.save(
-                new Photo(null, "-", masterCard, subcategoryId));
+                new Photo(null, "-", masterCard, subcategoryId, false));
         String path = uploadDir + IMAGE_NAME + newPhoto.getId();
         String newPhotoPath = uploadFileUtil.uploadFile(file, path + IMAGE_FORMAT);
         if (virusScanner.scanFile(newPhotoPath) instanceof ScanResult.VirusFound) {
-            photoRepository.delete(newPhoto);
             throw new VirusDetectionException("Virus detected in the uploaded photo.");
         }
+
         String fileName = IMAGE_NAME + newPhoto.getId() + IMAGE_FORMAT;
         newPhoto.setPhotoUrl(fileName);
-        photoRepository.save(newPhoto);
+        System.out.println("обрезка старт" + LocalDateTime.now());
         createImageCopy(path);
-        if (masterCard.getGallery().isEmpty()) {
+        System.out.println("обрезка finish" + LocalDateTime.now());
+        if (masterCard.getMainPhoto() == null) {
             createMainImage(path);
             masterCard.setMainPhoto(newPhoto);
             masterCardRepository.save(masterCard);
+            newPhoto.setMain(true);
         }
-        return new PhotoDto(fileName);
+        Photo savePhoto = photoRepository.save(newPhoto);
+        return new PhotoDto(savePhoto.getId(), fileName, savePhoto.isMain());
     }
 
+    @Transactional
     @Override
     public void deletePhoto(Long id) {
         Photo photo = photoRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Not found photo by id " + id));
+        List<ServiceCard> serviceCards = serviceCardRepository.findAllByPhotoId(id);
+        if (!serviceCards.isEmpty()) {
+            for (ServiceCard serviceCard : serviceCards) {
+                serviceCard.setPhoto(null);
+                serviceCardRepository.save(serviceCard);
+            }
+        }
+        if (photo.isMain()) {
+            MasterCard masterCard = getMasterCardAuthenticatedUser();
+            masterCard.setMainPhoto(null);
+            masterCardRepository.save(masterCard);
+        }
         String file = photo.getPhotoUrl();
         photoRepository.delete(photo);
         if (file.contains(":")) {
@@ -86,77 +111,106 @@ public class PhotoServiceImpl implements PhotoService {
         deleteFile(file);
     }
 
+    @Transactional
     @Override
     public void updateMainPhoto(Long id) {
         MasterCard masterCard = getMasterCardAuthenticatedUser();
         Photo photo = photoRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Not found photo by id " + id));
-        String fileName = masterCard.getMainPhoto().getPhotoUrl();
-        masterCard.setMainPhoto(photo);
-        String name = fileName.substring(0, fileName.length() - 3);
-        deleteFile(uploadDir + name + "M" + IMAGE_FORMAT);
-        deleteFile(uploadDir + name + "Mm" + IMAGE_FORMAT);
-        createMainImage(uploadDir + name);
+        if (masterCard.getMainPhoto() != null) {
+            Photo mainPhoto = masterCard.getMainPhoto();
+            String name = mainPhoto.getPhotoUrl().substring(
+                    0, mainPhoto.getPhotoUrl().length() - 4);
+            deleteFile(name + "M" + IMAGE_FORMAT);
+            deleteFile(name + "Mm" + IMAGE_FORMAT);
+            mainPhoto.setMain(false);
+            photoRepository.save(mainPhoto);
+        }
+        photo.setMain(true);
+        masterCard.setMainPhoto(photoRepository.save(photo));
+        masterCardRepository.save(masterCard);
+        String newName = photo.getPhotoUrl().substring(0, photo.getPhotoUrl().length() - 4);
+        createMainImage(uploadDir + newName);
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public List<PhotoDto> getPhotoByMasterCardAndSubcategory(
-            Long subcategoryId, Long masterCardId) {
+    public Page<PhotoDto> getPhotoByMasterCardAndSubcategory(
+            Pageable pageable, Long subcategoryId, Long masterCardId) {
         if (masterCardId == null) {
             masterCardId = getMasterCardAuthenticatedUser().getId();
         }
-        return photoRepository
-                .findAllByMasterCardIdAndSubcategoryId(masterCardId, subcategoryId).stream()
+        Page<Photo> photos = photoRepository.findAllByMasterCardIdAndSubcategoryId(
+                pageable, masterCardId, subcategoryId);
+        List<PhotoDto> photoDtos = photos.stream()
+                .map(photoMapper::toDto)
+                .toList();
+        return new PageImpl<>(
+                photoDtos,
+                photos.getPageable(),
+                photos.getTotalElements()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PhotoDto> getRandomPhotoByMasterCard(Long masterCardId) {
+        if (masterCardId == null) {
+            masterCardId = getMasterCardAuthenticatedUser().getId();
+        }
+        return photoRepository.findRandomPhotosByMasterCardId(masterCardId).stream()
                 .map(photoMapper::toDto)
                 .toList();
     }
 
     private MasterCard getMasterCardAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return masterCardRepository.findByUserEmail(authentication.getName())
+        return masterCardRepository.findByUserUuid(authentication.getName())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Not fount master card by user email: "
-                        + authentication.getName()
+                                + authentication.getName()
                 ));
     }
 
     private void createImageCopy(String path) {
+        BufferedImage image = ImageUtil.readImage(path + IMAGE_FORMAT);
+
+        System.out.println("обрезка старт 1" + LocalDateTime.now());
         ImageUtil.resizeImage(
-                path + IMAGE_FORMAT,
+                image,
                 path + "G" + IMAGE_FORMAT,
                 498, 380
         );
+        System.out.println("обрезка finish 1 " + LocalDateTime.now());
+        System.out.println("обрезка старт 2" + LocalDateTime.now());
         ImageUtil.resizeImage(
-                path + IMAGE_FORMAT,
+                image,
                 path + "C" + IMAGE_FORMAT,
                 85,
                 85
         );
-        ImageUtil.applyBlur(
-                path + "G" + IMAGE_FORMAT,
-                path + "B" + IMAGE_FORMAT
-        );
     }
 
     private void createMainImage(String path) {
+        BufferedImage image = ImageUtil.readImage(path + IMAGE_FORMAT);
         ImageUtil.resizeImage(
-                path + IMAGE_FORMAT,
+                image,
                 path + "M" + IMAGE_FORMAT,
                 758, 436
         );
         ImageUtil.resizeImage(
-                path + IMAGE_FORMAT,
+                image,
                 path + "Mm" + IMAGE_FORMAT,
                 270,
                 200
         );
     }
 
-    private Long checkSubcategoryExistsById(MasterCard masterCard, Long subcategoryId) {
+    private Optional<Subcategory> checkSubcategoryExistsById(
+            MasterCard masterCard, Long subcategoryId) {
         return masterCard.getSubcategories().stream()
-                .map(Subcategory::getId).filter(id -> id.equals(subcategoryId))
-                .findFirst()
-                .orElse(null);
+                .filter(subcategory -> subcategory.getId().equals(subcategoryId))
+                .findFirst();
     }
 
     private void deleteFile(String file) {

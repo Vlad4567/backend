@@ -4,13 +4,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Setter
+@Getter
 @Entity
 @NoArgsConstructor
-public class City {
+public class City extends BaseModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,5 +20,10 @@ public class City {
 
     public City(Long id) {
         this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString(this);
     }
 }
