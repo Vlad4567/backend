@@ -71,7 +71,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
             return new UserLoginResponseDto(token, null);
         } catch (AuthenticationException e) {
-            throw new LoginException(e.getLocalizedMessage());
+            throw new LoginException("Bad credentials");
         }
     }
 
@@ -169,10 +169,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return token;
     }
 
-    private void checkUserVerificationStatus(String email) {
-        User user = userRepository.findByUuid(email)
+    private void checkUserVerificationStatus(String uuid) {
+        User user = userRepository.findByUuid(uuid)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Not found user by email: " + email)
+                        "Not found user by uuid: " + uuid)
                 );
         Optional<Role.RoleName> roleName = user.getRoles().stream()
                 .map(Role::getName)

@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_users_table
+      author: Petro Smoliar
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: uuid
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: emails
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+              - column:
+                  name: passwords
+                  type: VARCHAR(255)
+              - column:
+                  name: usernames
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+              - column:
+                  name: profile_photo
+                  type: VARCHAR(255)
+              - column:
+                  name: refresh_token
+                  type: VARCHAR(255)
+              - column:
+                  name: telegram_account_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_users_telegram_account

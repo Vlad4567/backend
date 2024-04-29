@@ -5,10 +5,12 @@ import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.web.multipart.MultipartFile;
 
 public class ImageUtil {
     private static final String IMAGE_FORMAT = "jpg";
@@ -32,7 +34,7 @@ public class ImageUtil {
         } else {
             int correctWidth = (int) (image.getWidth() / (originalCoefficient / targetCoefficient));
             int x = (Math.abs(image.getWidth() - correctWidth)) / 2;
-            finalImage = image.getSubimage((int) x, 0, correctWidth, image.getHeight());
+            finalImage = image.getSubimage(x, 0, correctWidth, image.getHeight());
         }
         try {
             Thumbnails.of(finalImage)
@@ -43,6 +45,11 @@ public class ImageUtil {
         } catch (IOException e) {
             throw new ImageProcessingException("Error resizing the image", e);
         }
+    }
+
+    public static String updatePath(String path, String update) {
+        String format = "." + IMAGE_FORMAT;
+        return path.replace(format, "") + update + format;
     }
 
     public static void applyBlur(String inputImagePath, String outputImagePath) {
@@ -80,6 +87,17 @@ public class ImageUtil {
             return ImageIO.read(new File(inputImagePath));
         } catch (IOException e) {
             throw new ImageProcessingException("Error reading the image", e);
+        }
+    }
+
+    public static BufferedImage convertMultipartFileToBufferedImage(MultipartFile file) {
+        byte[] fileBytes = new byte[0];
+        try {
+            fileBytes = file.getBytes();
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(fileBytes);
+            return ImageIO.read(inputStream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

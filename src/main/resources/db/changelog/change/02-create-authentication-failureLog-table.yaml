@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-authenticationfailurelog-table
+      author: Petro Smoliar
+      changes:
+        - createTable:
+            tableName: authentication_failure_log
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: ip
+                  type: VARCHAR(255)
+              - column:
+                  name: token
+                  type: VARCHAR(255)
+              - column:
+                  name: date
+                  type: TIMESTAMP
+              - column:
+                  name: login_fails
+                  type: INT
+              - column:
+                  name: block_end_time
+                  type: TIMESTAMP

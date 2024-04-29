@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_telegram_code_table
+      author: Petro Smoliar
+      changes:
+        - createTable:
+            tableName: telegram_code
+            columns:
+              - column:
+                  name: code
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    unique: true
+              - column:
+                  name: chat_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: user_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: user_uuid
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: operation
+                  type: ENUM('VERIFICATION', 'LOGIN')
+                  constraints:
+                    nullable: true
+        - sql:
+            sql: |
+              ALTER TABLE telegram_code
+              ADD CONSTRAINT operation_check
+              CHECK (operation IN ('VERIFICATION', 'LOGIN'));

@@ -140,6 +140,18 @@ public class MasterCardServiceImpl implements MasterCardService {
                         () -> new EntityNotFoundException(
                                 "Not found subcategory by " + id + "from list")
                 );
+        boolean isPresentServiceCard = masterCard.getServiceCards().stream()
+                .anyMatch(serviceCard -> serviceCard.getSubcategory().equals(sub));
+        if (isPresentServiceCard) {
+            throw new RuntimeException("");
+        }
+
+        boolean isPresentPhoto = masterCard.getGallery().stream()
+                .anyMatch(photo -> photo.getSubcategoryId().equals(id));
+        if (isPresentPhoto) {
+            throw new RuntimeException("");
+        }
+
         masterCard.getSubcategories().remove(sub);
         return masterCardRepository.save(masterCard).getSubcategories().stream()
                 .map(subcategoryMapper::toResponseDto)

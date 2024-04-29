@@ -31,6 +31,5 @@ public class ImageValidator implements ConstraintValidator<ImageFile, MultipartF
         ImageInfo imageInfo = Imaging.getImageInfo(inputStream, null);
         ImageInfo.CompressionAlgorithm imageType = imageInfo.getCompressionAlgorithm();
         return imageType != ImageInfo.CompressionAlgorithm.UNKNOWN;
-
     }
 }

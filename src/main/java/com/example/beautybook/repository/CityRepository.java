@@ -10,6 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CityRepository extends JpaRepository<City, Long> {
 
-    @Query("from City c where c.name LIKE %:text%")
+    @Query("SELECT c FROM City c WHERE LOWER(c.name) LIKE %:text%")
     Page<City> searchCityName(String text, Pageable pageable);
 }

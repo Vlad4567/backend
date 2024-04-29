@@ -11,7 +11,7 @@ import lombok.Data;
 @Data
 public class UserRegistrationDto {
     @Email(message = "Invalid email format.")
-    @NotNull(message = "Сan not be empty")
+    @NotBlank(message = "Email must not be blank")
     private String email;
     @Pattern(
             regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$",

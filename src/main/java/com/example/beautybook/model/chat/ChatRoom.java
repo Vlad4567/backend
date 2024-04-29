@@ -4,7 +4,6 @@ import com.example.beautybook.annotetion.IgnoreToSting;
 import com.example.beautybook.model.BaseModel;
 import com.example.beautybook.model.User;
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -14,7 +13,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
-@Entity
 @Getter
 @Setter
 @SQLRestriction("is_deleted=false")

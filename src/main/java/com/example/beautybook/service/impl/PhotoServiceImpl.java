@@ -2,7 +2,6 @@ package com.example.beautybook.service.impl;
 
 import com.example.beautybook.dto.photo.PhotoDto;
 import com.example.beautybook.exceptions.EntityNotFoundException;
-import com.example.beautybook.exceptions.VirusDetectionException;
 import com.example.beautybook.exceptions.photo.GalleryLimitExceededException;
 import com.example.beautybook.mapper.PhotoMapper;
 import com.example.beautybook.model.MasterCard;
@@ -23,6 +22,8 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.ScheduledExecutorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -33,7 +34,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import xyz.capybara.clamav.commands.scan.result.ScanResult;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +46,7 @@ public class PhotoServiceImpl implements PhotoService {
     private final PhotoRepository photoRepository;
     private final PhotoMapper photoMapper;
     private final UploadFileUtil uploadFileUtil;
+    private final ScheduledExecutorService executor;
     @Value("${uploud.dir}")
     private String uploadDir;
     @Value("${limit.photo}")
@@ -66,21 +67,25 @@ public class PhotoServiceImpl implements PhotoService {
         Photo newPhoto = photoRepository.save(
                 new Photo(null, "-", masterCard, subcategoryId, false));
         String path = uploadDir + IMAGE_NAME + newPhoto.getId();
-        String newPhotoPath = uploadFileUtil.uploadFile(file, path + IMAGE_FORMAT);
-        if (virusScanner.scanFile(newPhotoPath) instanceof ScanResult.VirusFound) {
-            throw new VirusDetectionException("Virus detected in the uploaded photo.");
-        }
+        uploadFileUtil.uploadFile(file, path + IMAGE_FORMAT);
 
         String fileName = IMAGE_NAME + newPhoto.getId() + IMAGE_FORMAT;
         newPhoto.setPhotoUrl(fileName);
         System.out.println("обрезка старт" + LocalDateTime.now());
-        createImageCopy(path);
+
         System.out.println("обрезка finish" + LocalDateTime.now());
         if (masterCard.getMainPhoto() == null) {
-            createMainImage(path);
+            executor.execute(() -> {
+                createImageCopy(path);
+                createMainImage(path);
+            });
             masterCard.setMainPhoto(newPhoto);
             masterCardRepository.save(masterCard);
             newPhoto.setMain(true);
+        } else {
+            executor.execute(() -> {
+                createImageCopy(path);
+            });
         }
         Photo savePhoto = photoRepository.save(newPhoto);
         return new PhotoDto(savePhoto.getId(), fileName, savePhoto.isMain());
@@ -130,7 +135,10 @@ public class PhotoServiceImpl implements PhotoService {
         masterCard.setMainPhoto(photoRepository.save(photo));
         masterCardRepository.save(masterCard);
         String newName = photo.getPhotoUrl().substring(0, photo.getPhotoUrl().length() - 4);
-        createMainImage(uploadDir + newName);
+
+        executor.execute(() -> {
+            createMainImage(uploadDir + newName);
+        });
     }
 
     @Transactional(readOnly = true)
@@ -158,7 +166,8 @@ public class PhotoServiceImpl implements PhotoService {
         if (masterCardId == null) {
             masterCardId = getMasterCardAuthenticatedUser().getId();
         }
-        return photoRepository.findRandomPhotosByMasterCardId(masterCardId).stream()
+        return photoRepository.findPhotosByMasterCardId(masterCardId).stream()
+                .limit(4)
                 .map(photoMapper::toDto)
                 .toList();
     }

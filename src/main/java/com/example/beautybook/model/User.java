@@ -53,7 +53,7 @@ public class User extends BaseModel implements UserDetails {
     private String password;
 
     @Column(
-            name = "username",
+            name = "usernames",
             nullable = false,
             unique = true
     )

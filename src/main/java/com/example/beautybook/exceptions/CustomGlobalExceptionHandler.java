@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.apache.commons.imaging.ImageReadException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -24,7 +25,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @ControllerAdvice
 public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler {
-
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
@@ -53,7 +53,8 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
             GalleryLimitExceededException.class,
             InvalidOriginFileNameException.class,
             SQLIntegrityConstraintViolationException.class,
-            TelegramException.class
+            TelegramException.class,
+            ImageReadException.class
     })
     public ResponseEntity<Object> handleBadRequestExceptions(
             Exception ex) {

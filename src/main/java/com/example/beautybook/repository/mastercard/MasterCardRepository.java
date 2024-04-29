@@ -18,12 +18,11 @@ public interface MasterCardRepository extends JpaRepository<MasterCard, Long>,
 
     Optional<MasterCard> findMasterCardByIdAndIsHiddenIsFalse(Long id);
 
-    @Query("FROM MasterCard m "
-            + "WHERE m.isHidden = FALSE")
+    @Query(value = "SELECT * FROM master_card m WHERE m.is_hidden = FALSE", nativeQuery = true)
     Page<MasterCard> findAllByOrderByRatingDesc(Pageable pageable);
 
     @Modifying
-    @Query("UPDATE MasterCard m SET m.rating = :rating WHERE m.id = :id")
+    @Query(value = "UPDATE master_card SET rating = :rating WHERE id = :id", nativeQuery = true)
     void updateRating(Long id, BigDecimal rating);
 
     boolean existsByUserEmail(String email);

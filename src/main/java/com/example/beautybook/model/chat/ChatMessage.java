@@ -3,7 +3,6 @@ package com.example.beautybook.model.chat;
 import com.example.beautybook.annotetion.OnlyIdToString;
 import com.example.beautybook.model.BaseModel;
 import com.example.beautybook.model.User;
-import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,7 +12,6 @@ import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity
 @Getter
 @Setter
 public class ChatMessage extends BaseModel {

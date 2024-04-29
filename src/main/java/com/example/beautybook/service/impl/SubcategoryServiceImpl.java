@@ -41,6 +41,7 @@ public class SubcategoryServiceImpl implements SubcategoryService {
         }
         Subcategory subcategory = subcategoryMapper.toModel(subcategoryDto);
         subcategory.setId(id);
+
         return subcategoryMapper.toDto(subcategoryRepository.save(subcategory));
     }
 }
