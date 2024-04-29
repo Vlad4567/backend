@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-contacts-table
+      author: Petro Smoliar
+      changes:
+        - createTable:
+            tableName: contacts
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: instagram
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: facebook
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: telegram
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: phone
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true

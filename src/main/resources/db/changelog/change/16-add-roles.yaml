@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: insertInitialRoles
+      author: Petro Smoliar
+      changes:
+        - insert:
+            tableName: role
+            columns:
+              - column:
+                  name: names
+                  value: UNVERIFIED
+        - insert:
+            tableName: role
+            columns:
+              - column:
+                  name: names
+                  value: ADMIN
+        - insert:
+            tableName: role
+            columns:
+              - column:
+                  name: names
+                  value: MASTER
+        - insert:
+            tableName: role
+            columns:
+              - column:
+                  name: names
+                  value: CUSTOMER

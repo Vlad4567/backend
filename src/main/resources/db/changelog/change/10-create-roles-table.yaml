@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_roles_table
+      author: Petro Smoliar
+      changes:
+        - createTable:
+            tableName: role
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: names
+                  type: ENUM('UNVERIFIED', 'ADMIN', 'MASTER', 'CUSTOMER')
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: |
+              ALTER TABLE role
+              ADD CONSTRAINT role_name_check
+              CHECK (names IN ('UNVERIFIED', 'ADMIN', 'MASTER', 'CUSTOMER'));

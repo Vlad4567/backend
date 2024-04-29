@@ -11,6 +11,10 @@ import com.example.beautybook.validation.ImageFile;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,7 +46,7 @@ public class UserController {
     public String uploadProfilePhoto(
             @RequestParam("file")
             @Valid
-            @ImageFile
+            @ImageFile()
             MultipartFile file
     ) {
         return userService.uploadProfilePhoto(file);
@@ -69,9 +73,12 @@ public class UserController {
     }
 
     @GetMapping("/user/updateEmail/{token}")
-    public String updateEmail(@PathVariable String token) {
+    public ResponseEntity<Resource> updateEmail(@PathVariable String token) {
         userService.updateEmail(token);
-        return "ok";
+        Resource resource = new ClassPathResource("templates/verEm.html");
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_HTML)
+                .body(resource);
     }
 
     @PutMapping("/user/verificationNewMail")

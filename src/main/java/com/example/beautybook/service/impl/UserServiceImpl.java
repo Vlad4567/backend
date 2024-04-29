@@ -10,7 +10,6 @@ import com.example.beautybook.exceptions.AccessDeniedException;
 import com.example.beautybook.exceptions.DataConflictException;
 import com.example.beautybook.exceptions.EntityNotFoundException;
 import com.example.beautybook.exceptions.RegistrationException;
-import com.example.beautybook.exceptions.VirusDetectionException;
 import com.example.beautybook.mapper.UserMapper;
 import com.example.beautybook.message.MessageProvider;
 import com.example.beautybook.model.Role;
@@ -25,10 +24,13 @@ import com.example.beautybook.util.UploadFileUtil;
 import com.example.beautybook.util.VirusScannerUtil;
 import com.example.beautybook.util.impl.ImageUtil;
 import java.awt.image.BufferedImage;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,7 +38,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import xyz.capybara.clamav.commands.scan.result.ScanResult;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +66,7 @@ public class UserServiceImpl implements UserService {
     private final VirusScannerUtil virusScannerUtil;
     private final PasswordGeneratorUtil passwordGenerator;
     private final EmailSenderUtil emailSenderUtil;
+    private final ScheduledExecutorService executor;
     @Value("${uploud.dir}")
     private String uploadDir;
 
@@ -109,12 +111,15 @@ public class UserServiceImpl implements UserService {
         User user = getAuthenticatedUser();
         String fileName = FILE_NAME + user.getId() + IMAGE_FORMAT;
         String path = uploadDir + fileName;
-        uploadFileUtil.uploadFile(file, path);
-        if (virusScannerUtil.scanFile(path) instanceof ScanResult.VirusFound) {
-            throw new VirusDetectionException("Virus detected in the uploaded photo.");
-        }
 
-        savePhotosWithResizedDimensions(path, user.getId());
+        System.out.println("start save file: " + LocalDateTime.now());
+        uploadFileUtil.uploadFile(file, path);
+        System.out.println("saved file: " + LocalDateTime.now());
+
+        executor.execute(() -> {
+            savePhotosWithResizedDimensions(file, path, user.getId());
+        });
+
         user.setProfilePhoto(fileName);
         userRepository.save(user);
         return fileName;
@@ -168,11 +173,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void updateEmail(String token) {
         if (jwtUtil.isValidToken(token, JwtUtil.Secret.MAIL)) {
-            String emails = jwtUtil.getUsername(token, JwtUtil.Secret.MAIL);
-            String email = emails.split(DELIMITER_EMAIL)[INDEX_EMAIL];
-            String newEmail = emails.split(DELIMITER_EMAIL)[INDEX_NEW_EMAIL];
-            User user = userRepository.findByUuid(email).orElseThrow(
-                    () -> new EntityNotFoundException("Not found user by email " + email));
+            String date = jwtUtil.getUsername(token, JwtUtil.Secret.MAIL);
+            String uuid = date.split(DELIMITER_EMAIL)[INDEX_EMAIL];
+            String newEmail = date.split(DELIMITER_EMAIL)[INDEX_NEW_EMAIL];
+            User user = userRepository.findByUuid(uuid).orElseThrow(
+                    () -> new EntityNotFoundException("Not found user by email " + uuid));
             user.setEmail(newEmail);
             userRepository.save(user);
         }
@@ -186,10 +191,10 @@ public class UserServiceImpl implements UserService {
             throw new AccessDeniedException("Incorrect password");
         }
         String newEmail = updateEmailDto.getNewEmail();
-        String emails = user.getEmail() + DELIMITER_EMAIL + newEmail;
+        String date = user.getUuid() + DELIMITER_EMAIL + newEmail;
 
         String link = host + contextPath + API_UPDATE_EMAIL
-                + jwtUtil.generateToken(emails, JwtUtil.Secret.MAIL);
+                + jwtUtil.generateToken(date, JwtUtil.Secret.MAIL);
         String text = MessageProvider.getMessage(
                 "verification.email", user.getUserName(), link);
         emailSenderUtil.sendEmail(newEmail, "Verification email", text);
@@ -237,8 +242,13 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void savePhotosWithResizedDimensions(String path, Long userId) {
+    @SneakyThrows
+    private void savePhotosWithResizedDimensions(MultipartFile file, String path, Long userId) {
+        System.out.println("start read: " + LocalDateTime.now());
         BufferedImage image = ImageUtil.readImage(path);
+        System.out.println("finish read: " + LocalDateTime.now());
+
+        System.out.println("start resize: " + LocalDateTime.now());
         String fileNamePhotoReview = FILE_NAME + userId + "R" + IMAGE_FORMAT;
         String pathPhotoReview = uploadDir + fileNamePhotoReview;
         ImageUtil.resizeImage(image, path, WIDTH_PROFILE_PHOTO, HEIGHT_PROFILE_PHOTO);
@@ -248,5 +258,6 @@ public class UserServiceImpl implements UserService {
                 WIDTH_PROFILE_PHOTO_REVIEW,
                 HEIGHT_PROFILE_PHOTO_REVIEW
         );
+        System.out.println("finish resize: " + LocalDateTime.now());
     }
 }

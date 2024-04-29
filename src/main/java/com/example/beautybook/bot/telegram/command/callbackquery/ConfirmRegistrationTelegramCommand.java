@@ -76,7 +76,7 @@ public class ConfirmRegistrationTelegramCommand
                 telegramBot.send(
                         SendMessage.builder()
                                 .chatId(chatId)
-                                .text(text)
+                                .text(text.replaceAll("_", "-"))
                                 .replyMarkup(createKeyboardMarkup())
                                 .parseMode(ParseMode.MARKDOWN)
                                 .build()

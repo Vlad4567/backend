@@ -16,10 +16,12 @@ import com.example.beautybook.repository.servicecard.ServiceCardRepository;
 import com.example.beautybook.repository.user.SpecificationBuilder;
 import com.example.beautybook.service.ServiceCardService;
 import com.example.beautybook.util.impl.ImageUtil;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -41,6 +43,7 @@ public class ServiceCardServiceImpl implements ServiceCardService {
     private final MasterCardRepository masterCardRepository;
     private final PhotoRepository photoRepository;
     private final SpecificationBuilder<ServiceCard> specificationBuilder;
+    private final ScheduledExecutorService executor;
     @Value("${uploud.dir}")
     private String uploadDir;
 
@@ -56,18 +59,22 @@ public class ServiceCardServiceImpl implements ServiceCardService {
     @Transactional
     public ServiceCardDto createServiceCard(ServiceCardCreateDto serviceCardCreateDto) {
         ServiceCard serviceCard = serviceCardMapper.toModel(serviceCardCreateDto);
-        serviceCard.setMasterCard(getMasterCardAuthenticatedUser());
+        MasterCard masterCard = getMasterCardAuthenticatedUser();
+        serviceCard.setMasterCard(masterCard);
         if (serviceCard.getPhoto() != null) {
             Photo photo = photoRepository.findById(serviceCard.getPhoto().getId())
                     .orElseThrow(() -> new EntityNotFoundException("Not found photo by id"));
             String path = uploadDir + photo.getPhotoUrl();
-            String newPath = path.replace(IMAGE_FORMAT, "") + "S" + IMAGE_FORMAT;
-            ImageUtil.resizeImage(
-                    ImageUtil.readImage(path),
-                    newPath,
-                    WIDTH_PROFILE_PHOTO,
-                    HEIGHT_PROFILE_PHOTO
-            );
+            String newPath = ImageUtil.updatePath(path, "S");
+            if (!new File(newPath).exists()) {
+                executor.execute(() -> ImageUtil.resizeImage(
+                                ImageUtil.readImage(path),
+                                newPath,
+                                WIDTH_PROFILE_PHOTO,
+                                HEIGHT_PROFILE_PHOTO
+                        )
+                );
+            }
         }
         return serviceCardMapper.toDto(serviceCardRepository.save(serviceCard));
     }
@@ -116,32 +123,33 @@ public class ServiceCardServiceImpl implements ServiceCardService {
     @Override
     @Transactional
     public ServiceCardDto updateServiceCard(Long id, ServiceCardCreateDto dto) {
-        Long masterCardId = getMasterCardAuthenticatedUser().getId();
+        MasterCard masterCard = getMasterCardAuthenticatedUser();
+        Long masterCardId = masterCard.getId();
         ServiceCard serviceCard = serviceCardRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Not found service card by id " + id));
         if (!serviceCard.getMasterCard().getId().equals(masterCardId)) {
             throw new AccessDeniedException("The authorized user does not have "
                     + "a service card by ID " + id);
         }
-        if (serviceCard.getPhoto().getId() != null
-                && !dto.getPhotoId().equals(serviceCard.getPhoto().getId())) {
-            Photo photo = photoRepository.findById(dto.getPhotoId()).orElseThrow(
-                    () -> new EntityNotFoundException("Not found photo by id"));
-            Photo newPhoto = photoRepository.findById(serviceCard.getPhoto().getId()).orElseThrow(
-                    () -> new EntityNotFoundException("Not found photo by id"));
-            String path = uploadDir + photo.getPhotoUrl().replace(IMAGE_FORMAT, "")
-                    + "S" + IMAGE_FORMAT;
-            String newPath = uploadDir + newPhoto.getPhotoUrl().replace(IMAGE_FORMAT, "")
-                    + "S" + IMAGE_FORMAT;
-            deleteFile(path);
-            ImageUtil.resizeImage(
-                    ImageUtil.readImage(newPhoto.getPhotoUrl()),
-                    newPath,
-                    WIDTH_PROFILE_PHOTO,
-                    HEIGHT_PROFILE_PHOTO
-            );
-        }
+
         serviceCardMapper.updateServiceCardForDto(serviceCard, dto);
+
+        if (dto.getPhotoId() != null) {
+            Photo newPhoto = photoRepository.findById(dto.getPhotoId()).orElseThrow(
+                    () -> new EntityNotFoundException("Not found photo by id"));
+
+            if (serviceCard.getPhoto() == null) {
+                String path = uploadDir + newPhoto.getPhotoUrl();
+                createResizedImage(path, ImageUtil.updatePath(path, "S"));
+            } else {
+                Photo photo = photoRepository.findById(serviceCard.getPhoto().getId()).orElseThrow(
+                        () -> new EntityNotFoundException("Not found photo by id"));
+                updateServiceCardPhoto(photo, newPhoto, masterCard);
+            }
+
+        } else {
+            serviceCard.setPhoto(null);
+        }
         return serviceCardMapper.toDto(serviceCardRepository.save(serviceCard));
     }
 
@@ -160,6 +168,29 @@ public class ServiceCardServiceImpl implements ServiceCardService {
             Files.delete(filePath);
         } catch (IOException e) {
             throw new RuntimeException("Error deleting the infected file: " + path, e);
+        }
+    }
+
+    private void updateServiceCardPhoto(Photo photo, Photo newPhoto, MasterCard masterCard) {
+        String path = ImageUtil.updatePath(uploadDir + photo.getPhotoUrl(), "S");
+        String newPath = ImageUtil.updatePath(uploadDir + newPhoto.getPhotoUrl(), "S");
+        masterCard.getServiceCards().stream()
+                .filter(s -> s.getPhoto() == photo)
+                .findFirst()
+                .ifPresent(serviceCard -> deleteFile(path));
+        createResizedImage(uploadDir + photo.getPhotoUrl(), newPath);
+    }
+
+    private void createResizedImage(String path, String newPath) {
+        if (!new File(newPath).exists()) {
+            executor.execute(() -> {
+                ImageUtil.resizeImage(
+                        ImageUtil.readImage(path),
+                        newPath,
+                        WIDTH_PROFILE_PHOTO,
+                        HEIGHT_PROFILE_PHOTO
+                );
+            });
         }
     }
 }

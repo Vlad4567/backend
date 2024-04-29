@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-contact-forms-table
+      author: Petro Smoliar
+      changes:
+        - createTable:
+            tableName: contact_form
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: response
+                  type: TEXT
+                  constraints:
+                    nullable: true

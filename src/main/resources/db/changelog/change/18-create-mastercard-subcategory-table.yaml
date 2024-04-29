@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: createMastercardSubcategoriesTable
+      author: Petro Smoliar
+      changes:
+        - createTable:
+            tableName: mastercard_subcategory
+            columns:
+              - column:
+                  name: mastercard_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: subcategory_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+  - changeSet:
+      id: addForeignKeyMastercardId
+      author: Petro Smoliar
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: mastercard_subcategory
+            baseColumnNames: mastercard_id
+            referencedTableName: master_card
+            referencedColumnNames: id
+            constraintName: FK_mastercard_subcategory_mastercard
+            onDelete: CASCADE
+
+  - changeSet:
+      id: addForeignKeySubcategoryId
+      author: Petro Smoliar
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: mastercard_subcategory
+            baseColumnNames: subcategory_id
+            referencedTableName: subcategory
+            referencedColumnNames: id
+            constraintName: FK_mastercard_subcategory_subcategory
