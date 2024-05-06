@@ -34,4 +34,10 @@ public interface MasterCardService {
     void hideMasterCard();
 
     void unhideMasterCard();
+
+    void addFavoriteMasterCard(Long masterCardId);
+
+    void deleteFavoriteMasterCard(Long masterCardId);
+
+    Page<MasterCardResponseDto> getFavoriteMasterCard(Pageable pageable);
 }

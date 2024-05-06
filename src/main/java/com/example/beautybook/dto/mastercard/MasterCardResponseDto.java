@@ -15,4 +15,5 @@ public class MasterCardResponseDto {
     private Set<SubcategoryDto> subcategories;
     private BigDecimal rating;
     private String mainPhoto;
+    private boolean isFavorite;
 }

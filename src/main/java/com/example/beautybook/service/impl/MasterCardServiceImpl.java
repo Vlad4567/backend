@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -66,6 +67,9 @@ public class MasterCardServiceImpl implements MasterCardService {
         List<MasterCardResponseDto> dtos = masterCards.getContent().stream()
                 .map(masterCardMapper::toResponseDto)
                 .toList();
+        if (!SecurityContextHolder.getContext().getAuthentication().getName().equals("anonymousUser")) {
+            isFavoriteMasterCard(dtos, getAuthenticatedUser().getFavoriteMasterCards());
+        }
         return new PageImpl<>(
                 dtos,
                 masterCards.getPageable(),
@@ -109,6 +113,9 @@ public class MasterCardServiceImpl implements MasterCardService {
         List<MasterCardResponseDto> dtoList = masterCards.stream()
                 .map(masterCardMapper::toResponseDto)
                 .toList();
+        if (!SecurityContextHolder.getContext().getAuthentication().getName().equals("anonymousUser")) {
+            isFavoriteMasterCard(dtoList, getAuthenticatedUser().getFavoriteMasterCards());
+        }
         return new PageImpl<>(
                 dtoList, masterCards.getPageable(),
                 masterCards.getTotalElements()
@@ -183,6 +190,36 @@ public class MasterCardServiceImpl implements MasterCardService {
         masterCardRepository.save(masterCard);
     }
 
+    @Override
+    @Transactional
+    public void addFavoriteMasterCard(Long masterCardId) {
+        User user = getAuthenticatedUser();
+        user.getFavoriteMasterCards().add(new MasterCard(masterCardId));
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteFavoriteMasterCard(Long masterCardId) {
+        User user = getAuthenticatedUser();
+        user.getFavoriteMasterCards().stream()
+                .filter(masterCard -> masterCard.getId().equals(masterCardId))
+                .findFirst()
+                .ifPresent(masterCard -> user.getFavoriteMasterCards().remove(masterCard));
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public Page<MasterCardResponseDto> getFavoriteMasterCard(Pageable pageable) {
+        User user = getAuthenticatedUser();
+        Page<MasterCardResponseDto> responseDtos =
+                userRepository.findFavoriteMasterCardsByUser(user, pageable)
+                        .map(masterCardMapper::toResponseDto);
+        responseDtos.forEach(dto -> dto.setFavorite(true));
+        return responseDtos;
+    }
+
     private User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return userRepository.findByUuid(authentication.getName())
@@ -207,5 +244,18 @@ public class MasterCardServiceImpl implements MasterCardService {
             randomList.add(photos.get(random.nextInt(0, photos.size() - 1)));
         }
         return randomList;//TODO
+    }
+
+    private void isFavoriteMasterCard(List<MasterCardResponseDto> list, Set<MasterCard> favorite) {
+        List<Long> id = new ArrayList<>();
+        for (MasterCard m : favorite) {
+            id.add(m.getId());
+        }
+        List<Long> favoriteIds = favorite.stream().map(MasterCard::getId).toList();
+        list.forEach(dto -> {
+            if (favoriteIds.contains(dto.getId())) {
+                dto.setFavorite(true);
+                }
+        });
     }
 }

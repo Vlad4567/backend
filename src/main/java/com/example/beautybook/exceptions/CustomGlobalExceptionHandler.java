@@ -4,6 +4,7 @@ import com.example.beautybook.exceptions.photo.EmptyPhotoException;
 import com.example.beautybook.exceptions.photo.GalleryLimitExceededException;
 import com.example.beautybook.exceptions.photo.InvalidOriginFileNameException;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.validation.ConstraintViolationException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDateTime;
@@ -69,6 +70,7 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
     @ExceptionHandler({
             LoginException.class,
             LoginDeviceLimitExceededException.class,
+            JwtException.class
     })
     public ResponseEntity<Object> handleLoginExceptions(Exception ex) {
         return getResponse(ex, 403);

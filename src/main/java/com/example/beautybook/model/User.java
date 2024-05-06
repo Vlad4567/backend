@@ -11,10 +11,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
@@ -59,7 +62,16 @@ public class User extends BaseModel implements UserDetails {
     )
     private String username;
     private String profilePhoto;
+    @Column(name = "refresh_token")
     private String refreshToken;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_favorite_cards",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "card_id")
+    )
+    private Set<MasterCard> favoriteMasterCards = new HashSet<>();
 
     @OnlyIdToString
     @ManyToMany(fetch = FetchType.LAZY)
