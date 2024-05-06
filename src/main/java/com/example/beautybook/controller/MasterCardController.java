@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,7 +47,6 @@ public class MasterCardController {
 
     @GetMapping("/masterSortByRating")
     Page<MasterCardResponseDto> getTop20MasterCard(
-            HttpServletRequest request,
             @RequestParam(defaultValue = "0")
             int pageNumber,
             @RequestParam(defaultValue = "20")
@@ -107,5 +107,20 @@ public class MasterCardController {
     @PutMapping("/master/unhide")
     void unhideMasterCard() {
         masterCardService.unhideMasterCard();
+    }
+
+    @GetMapping("/master/favorite")
+    Page<MasterCardResponseDto> getFavoriteMasterCard(Pageable pageable) {
+        return masterCardService.getFavoriteMasterCard(pageable);
+    }
+
+    @PostMapping("/master/{masterCardId}/favorite")
+    void addFavoriteMasterCard(@PathVariable Long masterCardId) {
+        masterCardService.addFavoriteMasterCard(masterCardId);
+    }
+
+    @DeleteMapping("/master/{masterCardId}/favorite")
+    void deleteFavoriteMasterCard(@PathVariable Long masterCardId) {
+        masterCardService.deleteFavoriteMasterCard(masterCardId);
     }
 }

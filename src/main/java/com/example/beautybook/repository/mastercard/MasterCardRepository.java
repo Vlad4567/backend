@@ -25,5 +25,8 @@ public interface MasterCardRepository extends JpaRepository<MasterCard, Long>,
     @Query(value = "UPDATE master_card SET rating = :rating WHERE id = :id", nativeQuery = true)
     void updateRating(Long id, BigDecimal rating);
 
+    @Query(value = "SELECT * FROM user_favorite_cards u JOIN u.card_id where u.user_id = :userId", nativeQuery = true)
+    Page<MasterCard> findMasterCardFavoriteByUserId(Long userId, Pageable pageable);
+
     boolean existsByUserEmail(String email);
 }

@@ -39,3 +39,5 @@ databaseChangeLog:
       file: db/changelog/change/17-add-admin-user.yaml
   - include:
       file: db/changelog/change/18-create-mastercard-subcategory-table.yaml
+  - include:
+      file: db/changelog/change/21-create-user-favorite-cards-table.yaml

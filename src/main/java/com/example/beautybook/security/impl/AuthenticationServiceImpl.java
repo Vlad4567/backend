@@ -49,7 +49,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final TelegramCodeRepository codeRepository;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional()
     public UserLoginResponseDto authentication(UserLoginRequestDto loginRequestDto) {
         String uuid = userRepository.findUserByEmail(loginRequestDto.getEmail())
                 .orElseThrow(() -> new LoginException("Bad credentials")).getUuid();
@@ -97,15 +97,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Transactional
     public ResponseRefreshDto refreshToken(RequestRefreshDto requestRefreshDto) {
         String refreshToken = requestRefreshDto.refreshToken();
-        String email =
+        String uuid =
                 jwtUtil.getUsername(refreshToken, JwtUtil.Secret.REFRESH);
-        String token = userRepository.getRefreshTokenByEmail(email);
+        String token = userRepository.getRefreshTokenByUuid(uuid);
         if (token == null
                 || !jwtUtil.isValidToken(refreshToken, JwtUtil.Secret.REFRESH)
                 || !token.equals(refreshToken)) {
             throw new JwtException("RefreshToken in not valid");
         }
-        return new ResponseRefreshDto(jwtUtil.generateToken(email, JwtUtil.Secret.AUTH));
+        return new ResponseRefreshDto(jwtUtil.generateToken(uuid, JwtUtil.Secret.AUTH));
     }
 
     @Override
@@ -183,11 +183,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    private void saveRefreshToken(String email, String refreshToken) {
-        User user = userRepository.findByUuid(email).orElseThrow(
-                () -> new EntityNotFoundException("Not found user by email: " + email));
+    private void saveRefreshToken(String uuid, String refreshToken) {
+        User user = userRepository.findByUuid(uuid).orElseThrow(
+                () -> new EntityNotFoundException("Not found user by uuid: " + uuid));
         user.setRefreshToken(refreshToken);
-        userRepository.save(user);
+        User newuser = userRepository.save(user);
+
     }
 
     private boolean checkAndAddToBlock(AuthenticationFailureLog failureLog) {
